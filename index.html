@@ -8,16 +8,10 @@
 <body>
     <div class="cmd-container" id="cmd-container" v-on="click: focusCmd">
         <ul class="cmd-lines">
-            <li class="cmd-line">$ help</li>
-            <li class="cmd-line">
+            <li class="cmd-line" v-repeat="tbl: lines">
                 <table class="cmd-table">
-                    <tr>
-                        <td>ls</td>
-                        <td>lists the contents of the current directory</td>
-                    </tr>
-                    <tr>
-                        <td>mkdir {dirname}</td>
-                        <td>makes a new directory</td>
+                    <tr v-repeat="row: tbl">
+                        <td v-repeat="cell: row">{{cell}}</td>
                     </tr>
                 </table>
             </li>
@@ -25,7 +19,7 @@
         <div class="cmd-prompt">
             <autosize-textarea v-on="keydown: executeCmd | key enter,
                                      keydown: autoCompleteCmd | key tab"
-                               v-with="val: currentcommand"></autosize-textarea>
+                               v-with="val: currentCommand"></autosize-textarea>
         </div>
     </div>
 
