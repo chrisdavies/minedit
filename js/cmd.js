@@ -51,7 +51,7 @@
         description: 'Show the path for the current directory',
 
         execute: function (ctx) {
-            ctx.push(ctx.fs.path + '/');
+            ctx.push(ctx.fs.fullPath());
         }
     });
 
@@ -125,7 +125,29 @@
                 ctx.pushErr(result.err);
             }
         }
-    })
+    });
+
+    // cd command
+    cmds.register({
+        command: 'cd',
+        params: '{name}',
+        description: 'Navigate to the specified directory',
+
+        execute: function (ctx) {
+            var cmd = ctx.commandLine.pieces;
+
+            if (cmd.length != 2) {
+                ctx.pushErr('Directory name is required');
+                return;
+            }
+
+            var result = ctx.fs.cd(cmd[1]);
+
+            if (result.err) {
+                ctx.pushErr(result.err);
+            }
+        }
+    });
 
     // Command context
     function CommandContext(data, fs, commandLine) {
@@ -180,8 +202,6 @@
         },
 
         this.dir = this.root;
-
-        this.path = '';
     }
 
     FileSystem.prototype = {
@@ -193,7 +213,7 @@
 
         mkdir: function (name) {
             name = this.cleanName(name);
-            if (!this.isUnique(name)) {
+            if (this.find(name)) {
                 return { err: name + ' already exists.' };
             }
 
@@ -217,12 +237,43 @@
             return {};
         },
 
+        cd: function (name) {
+            name = this.cleanName(name);
+            var dir = this.find(name);
+
+            if (!dir) {
+                return { err: 'Could not find ' + name };
+            }
+
+            if (dir.type != 'd') {
+                return { err: name + ' is not a directory' };
+            }
+
+            this.dir = dir;
+            return dir;
+        },
+
         cleanName: function (name) {
             return (name || '').trim().replace(/["']/g, '');
         },
 
-        isUnique: function (name) {
-            return this.dir.children.every(function (c) { return c.name != name; });
+        fullPath: function () {
+            return '/' + this.dir.name;
+        },
+
+        find: function (name) {
+            var result;
+
+            this.dir.children.some(function (c) {
+                if (c.name == name) {
+                    result = c;
+                    return true;
+                }
+
+                return false;
+            });
+
+            return result;
         }
     };
 
