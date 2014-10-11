@@ -42,7 +42,7 @@ body {
 
 /* cmd-container */
 .cmd-container {
-    padding: 1em;
+    padding: 3em 1em 1em 3em;
     font-family: Courier New, Courier, monospace;
     background: #333;
     color: #EEE;
@@ -66,4 +66,16 @@ body {
 
 .cmd-line td {
     padding: 0 1em 0 0;
+}
+
+.cmd-prompt {
+    position: relative;
+    margin-left: 1em;
+}
+
+.cmd-prompt::before {
+    content: '$';
+    position: absolute;
+    top: 0;
+    left: -1em;
 }
