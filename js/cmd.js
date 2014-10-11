@@ -235,7 +235,8 @@
 
         mkdir: function (name) {
             name = this.cleanName(name);
-            if (this.find(name)) {
+
+            if (!this.find(name).err) {
                 return { err: name + ' already exists.' };
             }
 
@@ -260,20 +261,18 @@
             return {};
         },
 
-        cd: function (name) {
-            name = this.cleanName(name);
-            var dir = this.find(name);
+        cd: function (path) {
+            var dir = this.find(this.cleanName(path));
 
-            if (!dir) {
-                return { err: 'Could not find ' + name };
+            if (dir.err) {
+                return dir;
             }
 
             if (dir.type != 'd') {
-                return { err: name + ' is not a directory' };
+                return { err: path + ' is not a directory' };
             }
 
-            this.dir = dir;
-            return dir;
+            return (this.dir = dir);
         },
 
         cleanName: function (name) {
@@ -292,10 +291,28 @@
             return path.reverse().join('/');
         },
 
-        find: function (name) {
+        find: function (path, root) {
+            root = root || this.dir;
+
+            var pieces = path.split(/[\\\/]/);
+
+            while (root && pieces.length) {
+                var name = pieces.shift();
+
+                if (name == '..') {
+                    root = root.$parent;
+                } else if (name != '.') {
+                    root = this.child(name, root);
+                }
+            }
+
+            return root || { err: 'Could not find "' + path + '".' };
+        },
+
+        child: function (name, root) {
             var result;
 
-            this.dir.children.some(function (c) {
+            root.children.some(function (c) {
                 if (c.name == name) {
                     result = c;
                     return true;
