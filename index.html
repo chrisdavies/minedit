@@ -6,7 +6,7 @@
     <link href="css/main.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="cmd-container" id="cmd-container">
+    <div class="cmd-container" id="cmd-container" v-on="click: focusCmd">
         <ul class="cmd-lines">
             <li class="cmd-line">$ help</li>
             <li class="cmd-line">
@@ -23,7 +23,9 @@
             </li>
         </ul>
         <div class="cmd-prompt">
-            <autosize-textarea v-with="val: currentCommand"></autosize-textarea>
+            <autosize-textarea v-on="keydown: executeCmd | key enter,
+                                     keydown: autoCompleteCmd | key tab"
+                               v-with="val: currentcommand"></autosize-textarea>
         </div>
     </div>
 
