@@ -204,9 +204,29 @@
         },
 
         this.dir = this.root;
+
+        this.initialize();
     }
 
     FileSystem.prototype = {
+        initialize: function() {
+            function walkTree(fn, node, parent) {
+                if (node && node.type == 'd') {
+                    fn(node, parent);
+
+                    if (node.children) {
+                        for (var i = 0; i < node.children.length; ++i) {
+                            walkTree(fn, node.children[i], node);
+                        }
+                    }
+                }
+            }
+
+            walkTree(function (node, parent) {
+                node.$parent = parent;
+            }, this.root);
+        },
+
         ls: function () {
             var p = new Plite();
             p.resolve(this.dir.children);
@@ -222,7 +242,8 @@
             this.dir.children.push({
                 type: 'd',
                 name: name,
-                children: []
+                children: [],
+                $parent: this.dir
             });
 
             return {};
@@ -260,7 +281,15 @@
         },
 
         fullPath: function () {
-            return '/' + this.dir.name;
+            var path = [],
+                node = this.dir;
+
+            while (node) {
+                path.push(node.name);
+                node = node.$parent;
+            }
+
+            return path.reverse().join('/');
         },
 
         find: function (name) {
