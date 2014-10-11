@@ -15,6 +15,14 @@
         }
     };
 
+    // Commandline processor
+    function CommandLine(line) {
+        line = line || '';
+
+        this.line = line;
+        this.pieces = line.match(/\"[^\"]*\"|[^\s]*/g).filter(function (l) { return l.length; });
+    }
+
     // Help command
     cmds.register({
         command: 'help',
@@ -75,10 +83,55 @@
         }
     });
     
+    // Mkdir command 
+    cmds.register({
+        command: 'mkdir',
+        params: '{name}',
+        description: 'Make a directory of the specified name',
+
+        execute: function (ctx) {
+            var cmd = ctx.commandLine.pieces;
+
+            if (cmd.length != 2) {
+                ctx.pushErr('Directory name is required');
+                return;
+            }
+
+            var result = ctx.fs.mkdir(cmd[1]);
+
+            if (result.err) {
+                ctx.pushErr(result.err);
+            }
+        }
+    });
+
+    // rm command
+    cmds.register({
+        command: 'rm',
+        params: '{name}',
+        description: 'Remove the specified file or directory',
+
+        execute: function (ctx) {
+            var cmd = ctx.commandLine.pieces;
+
+            if (cmd.length != 2) {
+                ctx.pushErr('Directory name is required');
+                return;
+            }
+
+            var result = ctx.fs.rm(cmd[1]);
+
+            if (result.err) {
+                ctx.pushErr(result.err);
+            }
+        }
+    })
+
     // Command context
-    function CommandContext(data, fs) {
+    function CommandContext(data, fs, commandLine) {
         this.data = data;
         this.fs = fs;
+        this.commandLine = new CommandLine(commandLine);
     }
 
     CommandContext.prototype = {
@@ -95,7 +148,7 @@
             this.data.lines.push(dataSet);
         },
 
-        pushError: function (msg) {
+        pushErr: function (msg) {
             this.push(msg);
         }
     };
@@ -136,6 +189,40 @@
             var p = new Plite();
             p.resolve(this.dir.children);
             return p;
+        },
+
+        mkdir: function (name) {
+            name = this.cleanName(name);
+            if (!this.isUnique(name)) {
+                return { err: name + ' already exists.' };
+            }
+
+            this.dir.children.push({
+                type: 'd',
+                name: name,
+                children: []
+            });
+
+            return {};
+        },
+
+        rm: function (name) {
+            name = this.cleanName(name);
+            var children = this.dir.children.filter(function (c) { return c.name != name; });
+            if (children.length == this.dir.children.length) {
+                return { err: 'Could not find ' + name };
+            }
+
+            this.dir.children = children;
+            return {};
+        },
+
+        cleanName: function (name) {
+            return (name || '').trim().replace(/["']/g, '');
+        },
+
+        isUnique: function (name) {
+            return this.dir.children.every(function (c) { return c.name != name; });
         }
     };
 
@@ -166,14 +253,14 @@
                 executeCmd: function (e) {
                     e.preventDefault();
 
-                    var ctx = new CommandContext(this.$data, fs),
-                        cmdText = this.currentCommand.split(' ', 2)[0],
+                    var ctx = new CommandContext(this.$data, fs, this.currentCommand),
+                        cmdText = ctx.commandLine.pieces[0],
                         cmd = cmds.get(cmdText);
 
-                    ctx.push('$ ' + this.currentCommand);
+                    ctx.push('$ ' + ctx.commandLine.line);
 
                     if (!cmd) {
-                        ctx.pushError('Command "' + cmdText + '" not recognized.');
+                        ctx.pushErr('Command "' + cmdText + '" not recognized.');
                     } else {
                         cmd.execute(ctx);
                     }
