@@ -18,7 +18,8 @@
         </ul>
         <div class="cmd-prompt">
             <autosize-textarea v-on="keydown: executeCmd | key enter,
-                                     keydown: autoCompleteCmd | key tab"
+                                     keydown: autoCompleteCmd | key tab,
+                                     keydown: escCmd | key esc"
                                v-with="val: currentCommand"></autosize-textarea>
         </div>
     </div>

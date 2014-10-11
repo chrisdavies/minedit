@@ -41,6 +41,8 @@
                 return (a[0] < b[0] ? -1 : 1);
             });
 
+            dataSet.push(['<Esc>', 'Cancel the current command without running it']);
+
             ctx.push(dataSet);
         }
     });
@@ -322,6 +324,12 @@
                 autoCompleteCmd: function (e) {
                     e.preventDefault();
                     document.title = 'Autocompleting';
+                },
+
+                escCmd: function (e) {
+                    var ctx = new CommandContext(this.$data, fs, this.currentCommand);
+                    ctx.push('$ ' + ctx.commandLine.line);
+                    this.currentCommand = '';
                 },
 
                 focusCmd: function () {
