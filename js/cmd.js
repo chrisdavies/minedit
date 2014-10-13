@@ -84,6 +84,35 @@
             ctx.clear();
         }
     });
+
+    // Open command
+    cmds.register({
+        command: 'open',
+        params: '{name}',
+        description: 'Opens the specified file, creating it if it doesn\'t exist',
+
+        execute: function (ctx) {
+            var cmd = ctx.commandLine.pieces;
+
+            if (cmd.length != 2) {
+                ctx.pushErr('File name is required');
+                return;
+            }
+
+            var filePath = cmd[1],
+                result = ctx.fs.find(filePath);
+
+            if (result.type === 'd') {
+                ctx.pushErr('Cannot open a directory');
+                return;
+            }
+
+            ctx.data.file = {
+                path: filePath,
+                content: result.type === 'f' ? ctx.fs.load(filePath) : ''
+            };
+        }
+    });
     
     // Mkdir command 
     cmds.register({
@@ -176,183 +205,38 @@
             this.push(msg);
         }
     };
-
-
-    // File system //////////////////////////////////
-    function FileSystem() {
-        this.root = {
-            name: '',
-            type: 'd',
-
-            children: [{
-                name: 'My Docs',
-                type: 'd',
-
-                children: [{
-                    name: 'bar.txt',
-                    type: 'f'
-                }]
-            }, {
-                name: 'Stories',
-                type: 'd',
-
-                children: []
-            }, {
-                name: 'foo.txt',
-                type: 'f'
-            }]
-        },
-
-        this.dir = this.root;
-
-        this.initialize();
-    }
-
-    FileSystem.prototype = {
-        initialize: function() {
-            function walkTree(fn, node, parent) {
-                if (node && node.type == 'd') {
-                    fn(node, parent);
-
-                    if (node.children) {
-                        for (var i = 0; i < node.children.length; ++i) {
-                            walkTree(fn, node.children[i], node);
-                        }
-                    }
-                }
-            }
-
-            walkTree(function (node, parent) {
-                node.$parent = parent;
-            }, this.root);
-        },
-
-        ls: function () {
-            var p = new Plite();
-            p.resolve(this.dir.children);
-            return p;
-        },
-
-        mkdir: function (name) {
-            name = this.cleanName(name);
-
-            if (!this.find(name).err) {
-                return { err: name + ' already exists.' };
-            }
-
-            this.dir.children.push({
-                type: 'd',
-                name: name,
-                children: [],
-                $parent: this.dir
-            });
-
-            return {};
-        },
-
-        rm: function (name) {
-            name = this.cleanName(name);
-            var children = this.dir.children.filter(function (c) { return c.name != name; });
-            if (children.length == this.dir.children.length) {
-                return { err: 'Could not find ' + name };
-            }
-
-            this.dir.children = children;
-            return {};
-        },
-
-        cd: function (path) {
-            var dir = this.find(this.cleanName(path));
-
-            if (dir.err) {
-                return dir;
-            }
-
-            if (dir.type != 'd') {
-                return { err: path + ' is not a directory' };
-            }
-
-            return (this.dir = dir);
-        },
-
-        cleanName: function (name) {
-            return (name || '').trim().replace(/["']/g, '');
-        },
-
-        fullPath: function () {
-            var path = [],
-                node = this.dir;
-
-            while (node) {
-                path.push(node.name);
-                node = node.$parent;
-            }
-
-            return path.reverse().join('/');
-        },
-
-        find: function (path, root) {
-            root = root || this.dir;
-
-            var pieces = path.split(/[\\\/]/);
-
-            while (root && pieces.length) {
-                var name = pieces.shift();
-
-                if (name == '..') {
-                    root = root.$parent;
-                } else if (name != '.') {
-                    root = this.child(name, root);
-                }
-            }
-
-            return root || { err: 'Could not find "' + path + '".' };
-        },
-
-        child: function (name, root) {
-            var result;
-
-            root.children.some(function (c) {
-                if (c.name == name) {
-                    result = c;
-                    return true;
-                }
-
-                return false;
-            });
-
-            return result;
-        }
-    };
-
-    
+        
     // VUES /////////////////////////////////////////
     (function () {
-        var fs = new FileSystem();
+        var fs = new FileSystem(),
+            appData = {
+                currentCommand: '',
+                lines: [],
+                totalLines: 0,
+                file: null
+            };
 
         // Autosize textarea directive
         Vue.component('autosize-textarea', {
             template: '<div class="autosize-textarea"><textarea v-model="val" autocomplete="off"></textarea><pre>{{val}} \n \n</pre></div>'
         });
 
-        // Commandline vue controller
-        new Vue({
-            el: '#cmd-container',
-            data: {
-                currentCommand: '',
-                lines: [],
-                totalLines: 0
-            },
+        Vue.component('cmd-file', {
+            template: '#cmd-file-template',
+            methods: {
+                quitEditor: function (e) {
+                    this.file = null;
+                }
+            }
+        });
 
-            ready: function () {
-                this.focusCmd();
-            },
-
+        Vue.component('cmd-prompt', {
+            template: '#cmd-prompt-template',
             methods: {
                 executeCmd: function (e) {
                     e.preventDefault();
 
-                    var ctx = new CommandContext(this.$data, fs, this.currentCommand),
+                    var ctx = new CommandContext(appData, fs, this.currentCommand),
                         cmdText = ctx.commandLine.pieces[0],
                         cmd = cmds.get(cmdText);
 
@@ -376,8 +260,19 @@
                     var ctx = new CommandContext(this.$data, fs, this.currentCommand);
                     ctx.push('$ ' + ctx.commandLine.line);
                     this.currentCommand = '';
-                },
+                }
+            }
+        });
 
+        // Commandline vue controller
+        new Vue({
+            el: '#cmd-container',
+
+            data: {
+                appData: appData
+            },
+
+            methods: {
                 focusCmd: function () {
                     document.getElementsByTagName('textarea').item(0).focus();
                 }

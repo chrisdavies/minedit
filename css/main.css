@@ -5,6 +5,11 @@ body {
     min-height: 100%;
 }
 
+textarea {
+    background: transparent;
+    color: inherit;
+}
+
 /* Autosize */
 .autosize-textarea {
     position: relative;
@@ -40,6 +45,28 @@ body {
     visibility: hidden;
 }
 
+/* cmd-editor */
+.cmd-editor-container {
+    padding: 3em 1em 1em 3em;
+    font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
+    background: #333;
+    color: #EEE;
+
+    font-size: 1.1em;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+}
+
+.cmd-editor {
+    max-width: 800px;
+    margin: auto;
+    padding: 4em;
+}
+
 /* cmd-container */
 .cmd-container {
     padding: 3em 1em 1em 3em;
@@ -53,11 +80,6 @@ body {
     right: 0;
     bottom: 0;
     overflow: auto;
-}
-
-.cmd-container textarea {
-    background: transparent;
-    color: inherit;
 }
 
 .cmd-line {
