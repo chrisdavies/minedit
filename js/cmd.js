@@ -99,18 +99,14 @@
                 return;
             }
 
-            var filePath = cmd[1],
-                result = ctx.fs.find(filePath);
-
-            if (result.type === 'd') {
-                ctx.pushErr('Cannot open a directory');
-                return;
+            var fileName = cmd[1],
+                result = ctx.fs.load(fileName);
+            
+            if (!result.err) {
+                ctx.data.file = result;
             }
 
-            ctx.data.file = {
-                path: filePath,
-                content: result.type === 'f' ? ctx.fs.load(filePath) : ''
-            };
+            return result;
         }
     });
     
@@ -223,9 +219,17 @@
 
         Vue.component('cmd-file', {
             template: '#cmd-file-template',
+
             methods: {
                 quitEditor: function (e) {
                     this.file = null;
+                },
+
+                detectSaveCommand: function (e) {
+                    if (e.ctrlKey && e.which == 83) { // S 
+                        e.preventDefault();
+                        fs.save(this.file);
+                    }
                 }
             }
         });

@@ -2,6 +2,7 @@
 function FileSystem(tree) {
     this.root = tree || {};
     this.dir = this.root;
+    this.files = {};
 
     this.initialize();
 }
@@ -136,6 +137,41 @@ FileSystem.prototype = {
         });
 
         return result;
+    },
+
+    save: function (file) {
+        //this.file.id, this.file.filePath, this.file.content
+        file.id = file.id || new Date().getTime();
+        this.files[file.id] = file.content;
+
+        // File doesn't already exist
+        if (this.find(file.name).err !== undefined) {
+            this.dir.children.push({
+                type: 'f',
+                name: file.name,
+                $parent: this.dir,
+                id: file.id
+            });
+        }
+
+        return {};
+    },
+
+    load: function (name) {
+        name = this.cleanName(name);
+
+        var result = this.find(name);
+
+        if (result.type === 'd') {
+            ctx.pushErr('Cannot open a directory');
+            return;
+        }
+
+        return {
+            name: name,
+            id: result.id,
+            content: result.id ? this.files[result.id] : ''
+        };
     }
 };
 

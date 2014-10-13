@@ -14,7 +14,8 @@
     <script type="text/html" id="cmd-file-template">
         <div class="cmd-editor-container">
             <div class="cmd-editor">
-                <autosize-textarea v-with="val: file.content" v-on="keydown: quitEditor | key esc"></autosize-textarea>
+                <autosize-textarea v-with="val: file.content" v-on="keydown: quitEditor | key esc,
+                                                                    keydown: detectSaveCommand"></autosize-textarea>
             </div>
         </div>
     </script>
