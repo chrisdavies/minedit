@@ -6,7 +6,7 @@
     <link href="css/main.css" rel="stylesheet" />
 </head>
 <body>
-    <div id="cmd-container" v-on="click: focusCmd">
+    <div id="cmd-container" v-on="click: focusTextbox">
         <cmd-file v-if="appData.file != null" v-with="appData"></cmd-file>
         <cmd-prompt v-if="appData.file == null" v-with="appData"></cmd-prompt>
     </div>
