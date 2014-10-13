@@ -234,9 +234,17 @@
                 },
 
                 detectSaveCommand: function (e) {
-                    if (e.ctrlKey && e.which == 83) { // S 
+                    if (e.ctrlKey && e.which == 83) { // Ctrl + S 
                         e.preventDefault();
                         fs.save(this.file);
+                    } else if (e.which == 9) { // Tab
+                        e.preventDefault();
+                        var ta = this.$el.querySelector('textarea'),
+                            start = ta.selectionStart,
+                            end = ta.selectionEnd;
+
+                        ta.value = ta.value.substring(0, start) + '\t' + ta.value.substring(end);
+                        ta.selectionStart = ta.selectionEnd = (start + 1);
                     }
                 }
             }
