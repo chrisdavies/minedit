@@ -212,6 +212,10 @@
                 file: null
             };
 
+        function focusTextbox() {
+            document.getElementsByTagName('textarea').item(0).focus();
+        }
+
         // Autosize textarea directive
         Vue.component('autosize-textarea', {
             template: '<div class="autosize-textarea"><textarea v-model="val" autocomplete="off"></textarea><pre>{{val}} \n \n</pre></div>'
@@ -219,6 +223,10 @@
 
         Vue.component('cmd-file', {
             template: '#cmd-file-template',
+
+            ready: function () {
+                setTimeout(focusTextbox, 10);
+            },
 
             methods: {
                 quitEditor: function (e) {
@@ -236,6 +244,11 @@
 
         Vue.component('cmd-prompt', {
             template: '#cmd-prompt-template',
+
+            ready: function () {
+                setTimeout(focusTextbox, 10);
+            },
+
             methods: {
                 executeCmd: function (e) {
                     e.preventDefault();
@@ -277,9 +290,7 @@
             },
 
             methods: {
-                focusCmd: function () {
-                    document.getElementsByTagName('textarea').item(0).focus();
-                }
+                focusTextbox: focusTextbox
             }
         });
     })();
