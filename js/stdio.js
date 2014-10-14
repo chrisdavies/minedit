@@ -18,7 +18,7 @@
         },
 
         get: function (i) {
-            return i >= 0 && i <= this.buffer.length ? this.buffer[i] : undefined;
+            return this.buffer[i];
         },
 
         clear: function () {
@@ -43,10 +43,12 @@
         },
 
         process: function () {
-            if (this.line !== undefined && this.fn !== undefined) {
-                this.fn(this.line);
+            var line = this.line,
+                fn = this.fn;
 
+            if (line !== undefined && fn !== undefined) {
                 this.reset();
+                fn(line);
             }
         },
 
@@ -82,6 +84,10 @@
 
     ShellHistory.prototype = {
         push: function (line) {
+            if (this.buffer.size() && this.buffer.get(this.buffer.size() - 1) == line) {
+                return;
+            }
+
             this.buffer.push(line);
             this.index = this.buffer.size();
         },
@@ -110,10 +116,78 @@
         });
     }
 
+    ShellCommand.prototype = {
+        size: function () {
+            return this.params.length;
+        },
+
+        get: function (i) {
+            return this.params[i];
+        }
+    };
+
+    function ShellEnvironment() {
+        this.commands = {};
+    }
+
+    ShellEnvironment.prototype = {
+        all: function () {
+            var result = [];
+
+            for (var field in this.commands) {
+                result.push(this.commands[field]);
+            }
+
+            return result;
+        },
+
+        add: function (cmd) {
+            this.commands[cmd.name] = cmd;
+        },
+
+        get: function (name) {
+            return this.commands[name];
+        }
+    }
+
     function Shell() {
         this.stdin = new Stdin();
         this.stdout = new Stdout(1000);
         this.history = new ShellHistory(10);
+        this.commands = new ShellEnvironment();
+    }
+
+    Shell.prototype = {
+        run: function () {
+            var me = this;
+
+            function processInput(line) {
+                // Write the command to the terminal
+                me.stdout.writeLine('$ ' + line);
+
+                // Write the command to the history
+                me.history.push(line);
+
+                // Parse the command
+                var args = new ShellCommand(line);
+
+                // Lookup a matching command
+                if (args.size()) {
+                    var cmd = me.commands.get(args.get(0));
+
+                    if (!cmd) {
+                        me.stdout.writeLine('Could not find ' + args.get(0));
+                    } else {
+                        // Execute the command
+                        cmd.execute(args);
+                    }
+                }
+
+                me.stdin.readLine(processInput);
+            }
+
+            this.stdin.readLine(processInput);
+        }
     }
 
     return {
@@ -127,3 +201,31 @@
         ShellHistory: ShellHistory
     };
 })();
+
+// Standard shell commands
+(function (shell) {
+
+    shell.commands.add({
+        name: 'help',
+        description: 'Display available shell commands',
+
+        execute: function () {
+            var commands = shell.commands.all();
+
+            for (var i = 0; i < commands.length; ++i) {
+                var cmd = commands[i];
+                shell.stdout.writeLine(cmd.name + '    ' + cmd.description);
+            }
+        }
+    });
+
+    shell.commands.add({
+        name: 'clear',
+        description: 'Clear the shell terminal',
+
+        execute: function () {
+            shell.stdout.clear();
+        }
+    });
+
+})(SH.shell);

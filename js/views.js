@@ -1,4 +1,4 @@
-﻿(function () {
+﻿(function (ns) {
     
     function focusTextbox() {
         document.getElementsByTagName('textarea').item(0).focus();
@@ -43,6 +43,11 @@
     Vue.component('cmd-shell', {
         template: '#cmd-shell-template',
 
+        data: {
+            shellLines: SH.shell.stdout.buffer.buffer,
+            currentCommand: ''
+        },
+
         ready: function () {
             setTimeout(focusTextbox, 10);
         },
@@ -51,7 +56,8 @@
             feedLine: function (e) {
                 e.preventDefault();
 
-                // TODO: Enter text into stdin
+                ns.stdin.writeLine(this.currentCommand);
+                this.currentCommand = '';
             },
 
             autoComplete: function (e) {
@@ -62,6 +68,14 @@
 
             cancelCommand: function (e) {
                 // TODO: 
+            },
+
+            historyUp: function () {
+                this.currentCommand = ns.history.up();
+            },
+
+            historyDown: function () {
+                this.currentCommand = ns.history.down();
             }
         }
     });
@@ -75,4 +89,6 @@
         }
     });
 
-})();
+    ns.run();
+
+})(SH.shell);

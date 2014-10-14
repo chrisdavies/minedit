@@ -84,10 +84,8 @@ textarea {
 
 .cmd-line {
     margin-bottom: 0.5em;
-}
-
-.cmd-line td {
-    padding: 0 1em 0 0;
+    text-indent: -2em; 
+    padding-left: 2em;
 }
 
 .cmd-prompt {

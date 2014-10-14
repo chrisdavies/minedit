@@ -73,6 +73,20 @@
 
     QUnit.module('shellhistory');
 
+    QUnit.test('push ignores dups', function (assert) {
+        var hist = new SH.ShellHistory();
+
+        hist.push('hi');
+        hist.push('hi');
+        hist.push('bye');
+
+        var expected = ['bye', 'hi', ''];
+
+        for (var i = 0; i < expected.length; ++i) {
+            assert.equal(expected[i], hist.up());
+        }
+    });
+
     QUnit.test('up respects bounds', function (assert) {
         var hist = new SH.ShellHistory(4);
 

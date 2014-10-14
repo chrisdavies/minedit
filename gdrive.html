@@ -22,19 +22,17 @@
 
     <script type="text/html" id="cmd-shell-template">
         <div class="cmd-container">
-            <ul class="cmd-lines">
-                <li class="cmd-line" v-repeat="tbl: lines">
-                    <table class="cmd-table">
-                        <tr v-repeat="row: tbl">
-                            <td v-repeat="cell: row">{{cell}}</td>
-                        </tr>
-                    </table>
-                </li>
-            </ul>
+            <div class="cmd-lines">
+                <div class="cmd-line" v-repeat="line: shellLines">
+                    {{line}}
+                </div>
+            </div>
             <div class="cmd-prompt">
                 <autosize-textarea v-on="keydown: feedLine | key enter,
                                      keydown: autoComplete | key tab,
-                                     keydown: cancelCommand | key esc"
+                                     keydown: cancelCommand | key esc,
+                                     keydown: historyUp | key up,
+                                     keydown: historyDown | key down"
                                    v-with="val: currentCommand"></autosize-textarea>
             </div>
         </div>
@@ -43,7 +41,7 @@
     <script src="https://apis.google.com/js/client.js?onload=gdriveready"></script>
     <script src="js/vue.min.js"></script>
     <script src="js/plite.js"></script>
-    <script src="js/gdrive.js"></script>
+    <script src="js/stdio.js"></script>
     <script src="js/views.js"></script>
 </body>
 </html>
