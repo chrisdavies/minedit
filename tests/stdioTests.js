@@ -2,7 +2,7 @@
     QUnit.module('stdin');
 
     QUnit.test('calls the fn if available', function (assert) {
-        var stdin = new Stdin();
+        var stdin = new SH.Stdin();
 
         stdin.readLine(function (line) {
             assert.equal(line, 'hello, world!');
@@ -12,7 +12,7 @@
     });
 
     QUnit.test('processes one line at a time', function (assert) {
-        var stdin = new Stdin();
+        var stdin = new SH.Stdin();
         stdin.writeLine('yo');
 
         stdin.readLine(function (line) {
@@ -29,7 +29,7 @@
     QUnit.module('stdout');
 
     QUnit.test('respects buffer bounds', function (assert) {
-        var stdout = new Stdout(5);
+        var stdout = new SH.Stdout(5);
 
         for (var i = 0; i < 10; ++i) {
             stdout.writeLine(i.toString());
@@ -46,7 +46,7 @@
     });
 
     QUnit.test('retains color info', function (assert) {
-        var stdout = new Stdout();
+        var stdout = new SH.Stdout();
 
         stdout.writeLine('G', 'green');
         stdout.writeLine('Default');
@@ -61,7 +61,7 @@
     });
 
     QUnit.test('clear clears the array', function (assert) {
-        var stdout = new Stdout();
+        var stdout = new SH.Stdout();
 
         stdout.writeLine('hello');
         stdout.writeLine('world');
@@ -74,7 +74,7 @@
     QUnit.module('shellhistory');
 
     QUnit.test('up respects bounds', function (assert) {
-        var hist = new ShellHistory(4);
+        var hist = new SH.ShellHistory(4);
 
         for (var i = 0; i < 6; ++i) {
             hist.push(i.toString());
@@ -88,7 +88,7 @@
     });
 
     QUnit.test('down respects bounds', function (assert) {
-        var hist = new ShellHistory(4);
+        var hist = new SH.ShellHistory(4);
 
         for (var i = 0; i < 6; ++i) {
             hist.push(i.toString());
@@ -102,7 +102,7 @@
     });
     
     QUnit.test('push resets index', function (assert) {
-        var hist = new ShellHistory(4);
+        var hist = new SH.ShellHistory(4);
 
         for (var i = 0; i < 6; ++i) {
             hist.push(i.toString());
@@ -122,7 +122,7 @@
     QUnit.module('shellcommand');
 
     QUnit.test('strips quotes from parameters', function (assert) {
-        var cmd = new ShellCommand('cd "hello/world"');
+        var cmd = new SH.ShellCommand('cd "hello/world"');
 
         assert.equal(cmd.params.length, 2);
         assert.equal(cmd.params[0], 'cd');
@@ -130,7 +130,7 @@
     });
 
     QUnit.test('handles multiple parameters', function (assert) {
-        var cmd = new ShellCommand('hello world and everyone'),
+        var cmd = new SH.ShellCommand('hello world and everyone'),
             expected = ['hello', 'world', 'and', 'everyone'];
 
         assert.equal(cmd.params.length, expected.length);
