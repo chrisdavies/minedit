@@ -2,6 +2,7 @@
     this.clientId = clientId;
     this.scopes = 'https://www.googleapis.com/auth/drive';
     this.rootFolder;
+    this.currentPath = [];
 }
 
 GDrive.prototype = {
@@ -59,20 +60,21 @@ GDrive.prototype = {
 
         p.then(function (rootFolder) {
             console.log('resolved!!!');
-            me.rootFolder = rootFolder;
+            me.currentPath.push(me.rootFolder = rootFolder);
         });
 
         return p;
     },
 
-    ls: function (folderId) {
+    ls: function () {
         var p = new Plite(),
+            dir = this.currentPath[this.currentPath.length - 1],
             request = gapi.client.request({
                 'path': 'drive/v2/files',
                 'method': 'GET',
                 'params': {
                     'trashed': 'false',
-                    'q': "'" + folderId + "' in parents",
+                    'q': "'" + dir.id + "' in parents",
                     'maxResults': '100'
                 }
             });
@@ -82,13 +84,139 @@ GDrive.prototype = {
         });
 
         return p;
+    },
+
+    cd: function (path) {
+        var p = new Plite(),
+            root = this.rootFolder,
+            pieces = path.split(/[\\\/]/).filter(function (p) { return p.length; }),
+            currentPath = this.currentPath.slice(),
+            me = this;
+
+        function crawl() {
+            var name = pieces.shift();
+
+            if (name == '..') {
+                currentPath.pop();
+            } else {
+                me.getFile(name, currentPath[currentPath.length - 1]).then(function (file) {
+                    currentPath.push(file);
+
+                    if (pieces.length) {
+                        crawl();
+                    } else {
+                        me.currentPath = currentPath;
+                        p.resolve(currentPath);
+                    }
+                }).catch(function (err) {
+                    p.reject({ err: 'Could not find "' + path + '"' });
+                });
+            }
+        }
+
+        crawl();
+        
+        return p;
+    },
+
+    pwd: function () {
+        return '/' + this.currentPath.map(function (f) { return f.title; }).join('/');
+    },
+
+    mkdir: function (path) {
+        var p = new Plite(),
+            root = this.rootFolder,
+            pieces = path.split(/[\\\/]/).filter(function (p) { return p.length; }),
+            currentPath = this.currentPath.slice(),
+            me = this;
+
+        function crawl() {
+            var name = pieces.shift();
+
+            if (name == '..') {
+                currentPath.pop();
+            } else {
+                var parent = currentPath[currentPath.length - 1];
+
+                function pushFolder(folder) {
+                    currentPath.push(folder);
+
+                    if (pieces.length) {
+                        crawl();
+                    } else {
+                        p.resolve(currentPath);
+                    }
+                }
+
+                me.getFile(name, parent).then(pushFolder).catch(function (err) {
+                    // Folder doesn't exist: create it
+                    me.createFile(name, parent).then(pushFolder).catch(function (err) {
+                        p.reject(err);
+                    })
+                });
+            }
+        }
+
+        crawl();
+
+        return p;
+    },
+
+    createFile: function (name, parent, mimeType) {
+        var p = new Plite();
+        console.log('Creating ' + name + ' with parent', parent);
+        gapi.client.request({
+            path: '/drive/v2/files/',
+            method: 'POST',
+            body: {
+                title: name,
+                mimeType: mimeType || 'application/vnd.google-apps.folder',
+                parents: [{
+                    kind: 'drive#file',
+                    id: parent.id
+                }]
+            }
+        }).execute(function (result) {
+            if (result.error) {
+                p.reject({ err: result.error });
+            } else {
+                p.resolve(result);
+            }
+        });
+
+        return p;
+    },
+
+    getFile: function (name, parent) {
+        var p = new Plite();
+
+        gapi.client.request({
+            'path': 'drive/v2/files',
+            'method': 'GET',
+            'params': {
+                'trashed': 'false',
+                'q': "title='" + name + "' and '" + parent.id + "' in parents"
+            }
+        }).execute(function (result) {
+            if (!result.items || !result.items.length) {
+                p.reject({ err: 'Could not find "' + name + '"' });
+            } else {
+                p.resolve(result.items[0]);
+            }
+        });
+
+        return p;
+    },
+
+    pushPath: function (dir) {
+        this.currentPath.push(dir);
     }
 };
 
 (function () {
     var drive = new GDrive('141185055134-7i2slat0itmurhsej47u72ba0tspjhdb.apps.googleusercontent.com');
 
-    drive.init().then(function () {
+    function ls() {
         drive.ls(drive.rootFolder.id).then(function (r) {
             console.log('Got ', r);
             results = r.items;
@@ -96,140 +224,24 @@ GDrive.prototype = {
                 console.log(results[i].title);
             }
         });
-    })
-})();
-
-
-/*
-(function () {
-    var CLIENT_ID = '141185055134-7i2slat0itmurhsej47u72ba0tspjhdb.apps.googleusercontent.com',
-        SCOPES = 'https://www.googleapis.com/auth/drive';
-
-    function checkAuth() {
-        gapi.auth.authorize({
-            'client_id': CLIENT_ID,
-            'scope': SCOPES,
-            'immediate': true
-        },
-        handleAuthResult);
     }
-    
 
-    var rootFolder;
-
-    function ready() {
-        var g = new GDrive();
-        g.ls(rootFolder.id).then(function (results) {
-            for (var i = 0; i < results.length; ++i) {
-                console.log(results[i].title);
-            }
+    function cd() {
+        drive.cd('Poem/MoPoems').then(function () {
+            console.log(drive.pwd());
         });
     }
 
-    function loadOrCreateRootFolder(name) {
-        function getRootFolder() {
-            var request = gapi.client.request({
-                'path': 'drive/v2/files',
-                'method': 'GET',
-                'params': {
-                    'trashed': 'false',
-                    'q': "mimeType = 'application/vnd.google-apps.folder' and title = '" + name + "'",
-                    'maxResults': '1'
-                }
-            });
-
-            request.execute(checkRootFolder);
-        }
-
-        function checkRootFolder(resp) {
-            console.log('Got: ' + resp);
-            var result = resp.items;
-
-            if (!result.length) {
-                createRootFolder();
-            } else {
-                rootFolder = result[0];
-                ready();
-            }
-        }
-
-        function createRootFolder() {
-            console.log('Creating root folder');
-            var request = gapi.client.request({
-                'path': 'drive/v2/files',
-                'method': 'POST',
-                'body': {
-                    'title': name,
-                    'mimeType': 'application/vnd.google-apps.folder'
-                }
-            });
-
-            request.execute(printout);
-
-            function printout(result) {
-                rootFolder = result;
-                ready();
-            }
-        }
-
-        console.log('getting items');
-        getRootFolder();
+    function mkdir() {
+        drive.mkdir('/Poem/TestTest').then(function () {
+            console.log('Created testest');
+        }).catch(function (err) {
+            console.log('err ', err);
+        })
     }
 
-
-    function listContents() {
-        function getItems() {
-            var request = gapi.client.request({
-                'path': 'drive/v2/files',
-                'method': 'GET',
-                'params': {
-                    'trashed': 'false',
-                    'q': "mimeType = 'application/vnd.google-apps.folder' and title contains 'Hug '",
-                    'maxResults': '100'
-                }
-            });
-
-            request.execute(listItems);
-        }
-
-        function listItems(resp) {
-            console.log(resp);
-            var result = resp.items;
-            var i = 0;
-            for (i = 0; i < result.length; i++) {
-                console.log(result[i].title + ' -- ' + result[i]);
-            }
-        }
-
-        console.log('getting items');
-        getItems();
-    }
-
-
-    function handleAuthResult(authResult) {
-        if (authResult && !authResult.error) {
-            loadOrCreateRootFolder('Poem');
-        } else {
-            gapi.auth.authorize({
-                'client_id': CLIENT_ID,
-                'scope': SCOPES,
-                'immediate': false
-            },
-            handleAuthResult);
-        }
-    }
-
-    (function (interval) {
-        function waitForGapi() {
-            if (gapi && gapi.auth) {
-                clearInterval(interval);
-                console.log('Loading');
-                checkAuth();
-            }
-        }
-
-        interval = setInterval(waitForGapi, 10);
-    })();
-    
+    drive.init().then(function () {
+        mkdir();
+    })
 })();
-/**/
+

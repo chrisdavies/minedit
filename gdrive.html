@@ -1,12 +1,49 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Googles</title>
-    <script src="https://apis.google.com/js/client.js?onload=gdriveready"></script>
-    <script src="js/plite.js"></script>
-    <script src="js/gdrive.js"></script>
+    <title>MinEdit</title>
+    <link href="css/reset.css" rel="stylesheet" />
+    <link href="css/main.css" rel="stylesheet" />
 </head>
 <body>
-    <h1>GDRIVE</h1>
+    <div id="cmd-container" v-on="click: focusTextbox">
+        <cmd-editor v-if="appData.file != null"></cmd-editor>
+        <cmd-shell v-if="appData.file == null"></cmd-shell>
+    </div>
+
+    <script type="text/html" id="cmd-editor-template">
+        <div class="cmd-editor-container">
+            <div class="cmd-editor">
+                <autosize-textarea v-with="val: file.content" v-on="keydown: exit | key esc,
+                                                                    keydown: detectSpecialInput"></autosize-textarea>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/html" id="cmd-shell-template">
+        <div class="cmd-container">
+            <ul class="cmd-lines">
+                <li class="cmd-line" v-repeat="tbl: lines">
+                    <table class="cmd-table">
+                        <tr v-repeat="row: tbl">
+                            <td v-repeat="cell: row">{{cell}}</td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <div class="cmd-prompt">
+                <autosize-textarea v-on="keydown: feedLine | key enter,
+                                     keydown: autoComplete | key tab,
+                                     keydown: cancelCommand | key esc"
+                                   v-with="val: currentCommand"></autosize-textarea>
+            </div>
+        </div>
+    </script>
+
+    <script src="https://apis.google.com/js/client.js?onload=gdriveready"></script>
+    <script src="js/vue.min.js"></script>
+    <script src="js/plite.js"></script>
+    <script src="js/gdrive.js"></script>
+    <script src="js/views.js"></script>
 </body>
 </html>
