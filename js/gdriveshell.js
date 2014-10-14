@@ -45,5 +45,31 @@ SH.shell.fs.init().then(function () {
 
             return fs.cd(path);
         }
+    });
+
+    // mkdir
+    commands.add({
+        name: 'mkdir',
+        required: ['path'],
+        description: 'Create the specified directory',
+
+        execute: function (ctx) {
+            var path = ctx.get(1);
+
+            return fs.mkdir(path);
+        }
+    });
+
+    // rm
+    commands.add({
+        name: 'rm',
+        required: ['path'],
+        description: 'Remove the specified file or directory',
+
+        execute: function (ctx) {
+            var path = ctx.get(1);
+
+            return fs.rm(path);
+        }
     })
 });

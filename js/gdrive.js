@@ -111,46 +111,11 @@ GDrive.prototype = {
     },
 
     cd: function (path) {
-        var p = new Plite(),
-            me = this,
-            root = me.rootFolder,
-            pieces = path.split(/[\\\/]/).filter(function (p) { return p.length; }),
-            currentPath = me.currentPath.slice();
+        var me = this;
 
-        function resolve() {
-            if (currentPath.length) {
-                me.currentPath = currentPath;
-                p.resolve(currentPath);
-            } else {
-                p.reject({ err: 'Could not find "' + path + '"' });
-            }
-        }
-
-        function loadFile(name) {
-            me.getFile(name, currentPath[currentPath.length - 1]).then(function (file) {
-                currentPath.push(file);
-                crawl();
-            }).catch(function (err) {
-                p.reject(err);
-            });
-        }
-
-        function crawl() {
-            var name = pieces.pop();
-
-            if (!name || !currentPath.length) {
-                resolve();
-            } else if (name == '..') {
-                currentPath.pop();
-                crawl();
-            } else {
-                loadFile(name);
-            }
-        }
-
-        crawl();
-
-        return p;
+        return this.lookupPath(path).then(function (currentPath) {
+            me.currentPath = currentPath;
+        });
     },
 
     pwd: function () {
@@ -194,6 +159,23 @@ GDrive.prototype = {
         crawl();
 
         return p;
+    },
+
+    rm: function (path) {
+        this.lookupPath(path).then(function (expandedPath) {
+            var file = expandedPath[expandedPath.length - 1],
+                p = new Plite();
+
+            gapi.client.request({
+                path: '/drive/v2/files/' + file.id,
+                method: 'DELETE'
+            }).execute(function (response) {
+                console.log('rm result ', response);
+                p.resolve(response);
+            });
+
+            return p;
+        });
     },
 
     createFile: function (name, parent, mimeType) {
@@ -244,5 +226,47 @@ GDrive.prototype = {
 
     pushPath: function (dir) {
         this.currentPath.push(dir);
+    },
+
+    lookupPath: function (path) {
+        var p = new Plite(),
+            me = this,
+            root = me.rootFolder,
+            pieces = path.split(/[\\\/]/).filter(function (p) { return p.length; }),
+            currentPath = me.currentPath.slice();
+
+        function resolve() {
+            if (currentPath.length) {
+                p.resolve(currentPath);
+            } else {
+                p.reject({ err: 'Could not find "' + path + '"' });
+            }
+        }
+
+        function loadFile(name) {
+            me.getFile(name, currentPath[currentPath.length - 1]).then(function (file) {
+                currentPath.push(file);
+                crawl();
+            }).catch(function (err) {
+                p.reject(err);
+            });
+        }
+
+        function crawl() {
+            var name = pieces.pop();
+
+            if (!name || !currentPath.length) {
+                resolve();
+            } else if (name == '..') {
+                currentPath.pop();
+                crawl();
+            } else {
+                loadFile(name);
+            }
+        }
+
+        crawl();
+
+        return p;
     }
 };
