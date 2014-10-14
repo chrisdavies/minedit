@@ -100,8 +100,7 @@
         assert.equal(hist.down(), '5');
         assert.equal(hist.down(), '');
     });
-
-
+    
     QUnit.test('push resets index', function (assert) {
         var hist = new ShellHistory(4);
 
@@ -118,6 +117,27 @@
         assert.equal(hist.up(), 'foo');
         assert.equal(hist.up(), '5');
         assert.equal(hist.up(), '4');
+    });
+
+    QUnit.module('shellcommand');
+
+    QUnit.test('strips quotes from parameters', function (assert) {
+        var cmd = new ShellCommand('cd "hello/world"');
+
+        assert.equal(cmd.params.length, 2);
+        assert.equal(cmd.params[0], 'cd');
+        assert.equal(cmd.params[1], 'hello/world');
+    });
+
+    QUnit.test('handles multiple parameters', function (assert) {
+        var cmd = new ShellCommand('hello world and everyone'),
+            expected = ['hello', 'world', 'and', 'everyone'];
+
+        assert.equal(cmd.params.length, expected.length);
+
+        for (var i = 0; i < expected.length; ++i) {
+            assert.equal(expected[i], cmd.params[i]);
+        }
     });
 
 })();

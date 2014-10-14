@@ -96,6 +96,19 @@ ShellHistory.prototype = {
     }
 }
 
+function ShellCommand(line) {
+    this.original = line;
+    this.params = line.match(/\"[^\"]*\"|[^\s]*/g).map(function (v) {
+        if (v.length && v.charAt(0) == '"') {
+            return v.substr(1, v.length - 2);
+        }
+
+        return v;
+    }).filter(function (l) {
+        return l.length;
+    });
+}
+
 function Shell() {
     this.stdin = new Stdin();
     this.stdout = new Stdout(1000);
