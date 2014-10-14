@@ -112,34 +112,44 @@ GDrive.prototype = {
 
     cd: function (path) {
         var p = new Plite(),
-            root = this.rootFolder,
+            me = this,
+            root = me.rootFolder,
             pieces = path.split(/[\\\/]/).filter(function (p) { return p.length; }),
-            currentPath = this.currentPath.slice(),
-            me = this;
+            currentPath = me.currentPath.slice();
+
+        function resolve() {
+            if (currentPath.length) {
+                me.currentPath = currentPath;
+                p.resolve(currentPath);
+            } else {
+                p.reject({ err: 'Could not find "' + path + '"' });
+            }
+        }
+
+        function loadFile(name) {
+            me.getFile(name, currentPath[currentPath.length - 1]).then(function (file) {
+                currentPath.push(file);
+                crawl();
+            }).catch(function (err) {
+                p.reject(err);
+            });
+        }
 
         function crawl() {
-            var name = pieces.shift();
+            var name = pieces.pop();
 
-            if (name == '..') {
+            if (!name || !currentPath.length) {
+                resolve();
+            } else if (name == '..') {
                 currentPath.pop();
+                crawl();
             } else {
-                me.getFile(name, currentPath[currentPath.length - 1]).then(function (file) {
-                    currentPath.push(file);
-
-                    if (pieces.length) {
-                        crawl();
-                    } else {
-                        me.currentPath = currentPath;
-                        p.resolve(currentPath);
-                    }
-                }).catch(function (err) {
-                    p.reject({ err: 'Could not find "' + path + '"' });
-                });
+                loadFile(name);
             }
         }
 
         crawl();
-        
+
         return p;
     },
 

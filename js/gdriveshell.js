@@ -24,5 +24,26 @@ SH.shell.fs.init().then(function () {
         }
     });
 
+    // pwd
+    commands.add({
+        name: 'pwd',
+        description: 'Display the working directory',
 
+        execute: function () {
+            ns.stdout.writeLine(fs.pwd());
+        }
+    });
+
+    // cd
+    commands.add({
+        name: 'cd',
+        required: ['path'],
+        description: 'Change directory to the specified path',
+
+        execute: function (ctx) {
+            var path = ctx.get(1);
+
+            return fs.cd(path);
+        }
+    })
 });
