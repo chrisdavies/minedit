@@ -23,9 +23,7 @@
     <script type="text/html" id="cmd-shell-template">
         <div class="cmd-container">
             <div class="cmd-lines">
-                <div class="cmd-line" v-repeat="line: shellLines">
-                    {{line}}
-                </div>
+<div class="cmd-line" v-repeat="line: shellLines">{{line}}</div>
             </div>
             <div class="cmd-prompt">
                 <autosize-textarea v-on="keydown: feedLine | key enter,
@@ -41,7 +39,9 @@
     <script src="https://apis.google.com/js/client.js?onload=gdriveready"></script>
     <script src="js/vue.min.js"></script>
     <script src="js/plite.js"></script>
+    <script src="js/gdrive.js"></script>
     <script src="js/stdio.js"></script>
+    <script src="js/gdriveshell.js"></script>
     <script src="js/views.js"></script>
 </body>
 </html>

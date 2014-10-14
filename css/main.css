@@ -8,6 +8,7 @@ body {
 textarea {
     background: transparent;
     color: inherit;
+    outline: none;
 }
 
 /* Autosize */
@@ -86,6 +87,7 @@ textarea {
     margin-bottom: 0.5em;
     text-indent: -2em; 
     padding-left: 2em;
+    white-space: pre-wrap;
 }
 
 .cmd-prompt {

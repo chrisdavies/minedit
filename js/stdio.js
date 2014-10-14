@@ -150,11 +150,24 @@
         }
     }
 
+    function pad(str, num, truncate) {
+        str = str || '';
+        
+        if (str.length < num) {
+            return str + Array(num - str.length).join(' ');
+        } else if (str.length > num && truncate) {
+            return str.substr(0, num);
+        }
+
+        return str;
+    }
+
     function Shell() {
         this.stdin = new Stdin();
         this.stdout = new Stdout(1000);
         this.history = new ShellHistory(10);
         this.commands = new ShellEnvironment();
+        this.pad = pad;
     }
 
     Shell.prototype = {
@@ -214,7 +227,7 @@
 
             for (var i = 0; i < commands.length; ++i) {
                 var cmd = commands[i];
-                shell.stdout.writeLine(cmd.name + '    ' + cmd.description);
+                shell.stdout.writeLine(shell.pad(cmd.name, 10) + ' ' + cmd.description);
             }
         }
     });

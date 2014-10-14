@@ -80,7 +80,31 @@ GDrive.prototype = {
             });
 
         request.execute(function (result) {
-            p.resolve(result);
+            if (result.error) {
+                p.reject(result);
+            } else {
+                p.resolve((result.items || []).map(function (i) {
+                    return {
+                        name: i.title,
+                        type: i.mimeType == 'application/vnd.google-apps.folder' ? 'dir' : 'fil',
+                        id: i.id
+                    };
+                }).sort(function (a, b) {
+                    if (a.type != b.type) {
+                        if (a.type == 'dir') {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+
+                    if (a.name < b.name) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                }));
+            }
         });
 
         return p;
@@ -212,36 +236,3 @@ GDrive.prototype = {
         this.currentPath.push(dir);
     }
 };
-
-(function () {
-    var drive = new GDrive('141185055134-7i2slat0itmurhsej47u72ba0tspjhdb.apps.googleusercontent.com');
-
-    function ls() {
-        drive.ls(drive.rootFolder.id).then(function (r) {
-            console.log('Got ', r);
-            results = r.items;
-            for (var i = 0; i < results.length; ++i) {
-                console.log(results[i].title);
-            }
-        });
-    }
-
-    function cd() {
-        drive.cd('Poem/MoPoems').then(function () {
-            console.log(drive.pwd());
-        });
-    }
-
-    function mkdir() {
-        drive.mkdir('/Poem/TestTest').then(function () {
-            console.log('Created testest');
-        }).catch(function (err) {
-            console.log('err ', err);
-        })
-    }
-
-    drive.init().then(function () {
-        mkdir();
-    })
-})();
-
