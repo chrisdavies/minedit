@@ -67,7 +67,8 @@
             },
 
             cancelCommand: function (e) {
-                // TODO: 
+                ns.stdout.writeLine('$ ' + this.currentCommand);
+                this.currentCommand = '';
             },
 
             historyUp: function () {
