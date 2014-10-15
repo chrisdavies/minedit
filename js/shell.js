@@ -72,6 +72,18 @@
 
         clear: function () {
             this.buffer.clear();
+        },
+
+        pad: function (str, num, truncate) {
+            str = str || '';
+
+            if (str.length < num) {
+                return str + Array(num - str.length).join(' ');
+            } else if (str.length > num && truncate) {
+                return str.substr(0, num);
+            }
+
+            return str;
         }
     }
 
@@ -151,25 +163,12 @@
             return this.commands[name];
         }
     }
-
-    function pad(str, num, truncate) {
-        str = str || '';
-        
-        if (str.length < num) {
-            return str + Array(num - str.length).join(' ');
-        } else if (str.length > num && truncate) {
-            return str.substr(0, num);
-        }
-
-        return str;
-    }
-
+    
     function Shell() {
         this.stdin = new Stdin();
         this.stdout = new Stdout(1000);
         this.history = new ShellHistory(10);
         this.commands = new ShellEnvironment();
-        this.pad = pad; // TODO: should really go in the stdout
         this.status = {
             running: false
         };
@@ -238,7 +237,8 @@
 
 // Standard shell commands
 (function (shell) {
-
+    var stdout = shell.stdout;
+    
     shell.commands.add({
         name: 'help',
         description: 'Display available shell commands',
@@ -248,7 +248,7 @@
 
             for (var i = 0; i < commands.length; ++i) {
                 var cmd = commands[i];
-                shell.stdout.writeLine(shell.pad(cmd.name, 10) + ' ' + cmd.description);
+                stdout.writeLine(stdout.pad(cmd.name, 10) + ' ' + cmd.description);
             }
         }
     });
@@ -258,7 +258,7 @@
         description: 'Clear the shell terminal',
 
         execute: function () {
-            shell.stdout.clear();
+            stdout.clear();
         }
     });
 
@@ -272,11 +272,10 @@
 
         execute: function (args) {
             var cmdName = args.last(),
-                cmd = shell.commands.get(cmdName),
-                out = shell.stdout;
+                cmd = shell.commands.get(cmdName);
 
             if (!cmd) {
-                out.writeLine('Could not find command: ' + cmdName, 'red');
+                stdout.writeLine('Could not find command: ' + cmdName, 'red');
                 return;
             }
 
@@ -290,26 +289,26 @@
                 return name.charAt(0) == '-' ? name : '<' + name + '>';
             });
 
-            out.writeLine();
-            out.writeLine('NAME');
-            out.writeLine('    ' + cmdName + ' - ' + cmd.description);
-            out.writeLine();
-            out.writeLine('SYNOPSIS');
-            out.writeLine('    ' + cmdName + ' ' + cmdParams.join(' '));
-            out.writeLine();
+            stdout.writeLine();
+            stdout.writeLine('NAME');
+            stdout.writeLine('    ' + cmdName + ' - ' + cmd.description);
+            stdout.writeLine();
+            stdout.writeLine('SYNOPSIS');
+            stdout.writeLine('    ' + cmdName + ' ' + cmdParams.join(' '));
+            stdout.writeLine();
 
             var options = params.filter(function (p) { return p.description; });
 
             if (options.length) {
-                out.writeLine('OPTIONS');
+                stdout.writeLine('OPTIONS');
                 for (var i = 0; i < options.length; ++i) {
                     var p = options[i];
                     if (p.description) {
-                        out.writeLine('    ' + shell.pad(p.name, 7) + ' ' + (p.required ? '(required) ' : '') + p.description);
+                        stdout.writeLine('    ' + stdout.pad(p.name, 7) + ' ' + (p.required ? '(required) ' : '') + p.description);
                     }
                 }
 
-                out.writeLine();
+                stdout.writeLine();
             }
         }
     })

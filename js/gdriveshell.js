@@ -2,7 +2,8 @@
 SH.shell.fs.init().then(function () {
     var ns = SH.shell,
         commands = ns.commands,
-        fs = ns.fs;
+        fs = ns.fs,
+        stdout = ns.stdout;
 
     // ls
     commands.add({
@@ -17,15 +18,15 @@ SH.shell.fs.init().then(function () {
             var path = ctx.get(1);
             return fs.ls(path).then(function (files) {
                 if (files.length) {
-                    ns.stdout.writeLine();
-                    ns.stdout.writeLine('    Directory: ' + path);
-                    ns.stdout.writeLine();
-                    ns.stdout.writeLine(ns.pad('Type', 7) + ' ' + ns.pad('Name', 25));
-                    ns.stdout.writeLine(ns.pad('----', 7) + ' ' + ns.pad('----', 25));
+                    stdout.writeLine();
+                    stdout.writeLine('    Directory: ' + path);
+                    stdout.writeLine();
+                    stdout.writeLine(stdout.pad('Type', 7) + ' ' + stdout.pad('Name', 25));
+                    stdout.writeLine(stdout.pad('----', 7) + ' ' + stdout.pad('----', 25));
 
                     for (var i = 0; i < files.length; ++i) {
                         var file = files[i];
-                        ns.stdout.writeLine(ns.pad(file.type, 7) + ' ' + files[i].name);
+                        stdout.writeLine(stdout.pad(file.type, 7) + ' ' + files[i].name);
                     }
                 }
             });
@@ -38,7 +39,7 @@ SH.shell.fs.init().then(function () {
         description: 'Display the working directory',
 
         execute: function () {
-            ns.stdout.writeLine(fs.pwd());
+            stdout.writeLine(fs.pwd());
         }
     });
 
