@@ -121,6 +121,10 @@
 
         get: function (i) {
             return this.params[i];
+        },
+
+        last: function () {
+            return this.params[this.params.length - 1];
         }
     };
 
@@ -182,6 +186,7 @@
 
             function processInput(line) {
                 me.status.running = true;
+                console.log('Running: ' + line);
 
                 // Write the command to the terminal
                 me.stdout.writeLine('$ ' + line);
@@ -239,7 +244,7 @@
         description: 'Display available shell commands',
 
         execute: function () {
-            var commands = shell.commands.all();
+            var commands = shell.commands.all().sort(function (a, b) { return a.name > b.name ? 1 : -1; });
 
             for (var i = 0; i < commands.length; ++i) {
                 var cmd = commands[i];
@@ -256,5 +261,57 @@
             shell.stdout.clear();
         }
     });
+
+    shell.commands.add({
+        name: 'man',
+        description: 'Display usage manual for the specified command',
+        params: [{
+            name: 'command',
+            required: true
+        }],
+
+        execute: function (args) {
+            var cmdName = args.last(),
+                cmd = shell.commands.get(cmdName),
+                out = shell.stdout;
+
+            if (!cmd) {
+                out.writeLine('Could not find command: ' + cmdName, 'red');
+                return;
+            }
+
+            var params = cmd.params || [];
+            cmdParams = params.map(function (p) {
+                var name = p.name;
+                if (!p.required) {
+                    return '[' + name + ']';
+                }
+
+                return name.charAt(0) == '-' ? name : '<' + name + '>';
+            });
+
+            out.writeLine();
+            out.writeLine('NAME');
+            out.writeLine('    ' + cmdName + ' - ' + cmd.description);
+            out.writeLine();
+            out.writeLine('SYNOPSIS');
+            out.writeLine('    ' + cmdName + ' ' + cmdParams.join(' '));
+            out.writeLine();
+
+            var options = params.filter(function (p) { return p.description; });
+
+            if (options.length) {
+                out.writeLine('OPTIONS');
+                for (var i = 0; i < options.length; ++i) {
+                    var p = options[i];
+                    if (p.description) {
+                        out.writeLine('    ' + shell.pad(p.name, 7) + ' ' + (p.required ? '(required) ' : '') + p.description);
+                    }
+                }
+
+                out.writeLine();
+            }
+        }
+    })
 
 })(SH.shell);

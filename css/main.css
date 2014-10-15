@@ -84,7 +84,7 @@ textarea {
 }
 
 .cmd-line {
-    margin-bottom: 0.5em;
+    line-height: 1.4em;
     text-indent: -2em; 
     padding-left: 2em;
     white-space: pre-wrap;
@@ -92,7 +92,7 @@ textarea {
 
 .cmd-prompt {
     position: relative;
-    margin-left: 1em;
+    margin: 1em;
 }
 
 .cmd-prompt.processing {

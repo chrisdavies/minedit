@@ -7,8 +7,11 @@ SH.shell.fs.init().then(function () {
     // ls
     commands.add({
         name: 'ls',
-        optional: ['path'],
         description: 'Lists the contents of the current or specified directory',
+        params: [{
+            name: 'path',
+            description: 'The path to the directory whose contents are to be listed. If not specified, the current directory is used.'
+        }],
 
         execute: function (ctx) {
             var path = ctx.get(1);
@@ -42,8 +45,12 @@ SH.shell.fs.init().then(function () {
     // cd
     commands.add({
         name: 'cd',
-        required: ['path'],
         description: 'Change directory to the specified path',
+        params: [{
+            name: 'path',
+            description: 'The path to the directory',
+            required: true
+        }],
 
         execute: function (ctx) {
             var path = ctx.get(1);
@@ -55,8 +62,12 @@ SH.shell.fs.init().then(function () {
     // mkdir
     commands.add({
         name: 'mkdir',
-        required: ['path'],
         description: 'Create the specified directory',
+        params: [{
+            name: 'path',
+            description: 'The path to the directory to be created',
+            required: true
+        }],
 
         execute: function (ctx) {
             var path = ctx.get(1);
@@ -68,8 +79,12 @@ SH.shell.fs.init().then(function () {
     // rm
     commands.add({
         name: 'rm',
-        required: ['path'],
         description: 'Remove the specified file or directory',
+        params: [{
+            name: 'path',
+            description: 'The path to the directory that will be removed',
+            required: true
+        }],
 
         execute: function (ctx) {
             var path = ctx.get(1);
