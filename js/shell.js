@@ -115,6 +115,7 @@
 
     function ShellCommand(line) {
         this.original = line;
+
         this.params = line.match(/\"[^\"]*\"|[^\s]*/g).map(function (v) {
             if (v.length && v.charAt(0) == '"') {
                 return v.substr(1, v.length - 2);
@@ -124,6 +125,10 @@
         }).filter(function (l) {
             return l.length;
         });
+
+        this.command = this.params.shift();
+
+        this.app = undefined;
     }
 
     ShellCommand.prototype = {
@@ -135,8 +140,19 @@
             return this.params[i];
         },
 
+        has: function (arg) {
+            return this.params.indexOf(arg) >= 0;
+        },
+
         last: function () {
             return this.params[this.params.length - 1];
+        },
+
+        run: function (appName, appData) {
+            this.app = {
+                name: appName,
+                data: appData
+            };
         }
     };
 
@@ -170,7 +186,8 @@
         this.history = new ShellHistory(10);
         this.commands = new ShellEnvironment();
         this.status = {
-            running: false
+            running: false,
+            app: null
         };
     }
 
@@ -178,14 +195,14 @@
         run: function () {
             var me = this;
 
-            function inputProcessed() {
+            function inputProcessed(args) {
+                me.status.app = args.app;
                 me.status.running = false;
                 me.stdin.readLine(processInput);
             }
 
             function processInput(line) {
                 me.status.running = true;
-                console.log('Running: ' + line);
 
                 // Write the command to the terminal
                 me.stdout.writeLine('$ ' + line);
@@ -197,11 +214,11 @@
                 var args = new ShellCommand(line);
 
                 // Lookup a matching command
-                if (args.size()) {
-                    var cmd = me.commands.get(args.get(0));
+                if (args.command) {
+                    var cmd = me.commands.get(args.command);
 
                     if (!cmd) {
-                        me.stdout.writeLine('Unrecognized command: ' + args.get(0));
+                        me.stdout.writeLine('Unrecognized command: ' + args.command);
                     } else {
                         // Execute the command
                         try {
@@ -211,7 +228,7 @@
                                 return p.catch(function (result) {
                                     me.stdout.writeLine(result.err || result, 'red');
                                 }).finally(function () {
-                                    inputProcessed();
+                                    inputProcessed(args);
                                 });
                             }
                         } catch (err) {
@@ -220,7 +237,7 @@
                     }
                 }
 
-                inputProcessed();
+                inputProcessed(args);
             }
 
             this.stdin.readLine(processInput);

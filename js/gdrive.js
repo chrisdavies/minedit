@@ -116,13 +116,19 @@ GDrive.prototype = {
     },
 
     mkdir: function (path) {
-        var me = this;
+        var me = this,
+            exists = true;
 
         function onDirNotFound(name, parent) {
+            exists = false;
             return me._createFile(name, parent);
         }
 
-        return me._lookupPath(path, onDirNotFound);
+        return me._lookupPath(path, onDirNotFound).then(function () {
+            if (exists) {
+                throw { err: '"' + path + '" already exists!' };
+            }
+        });
     },
 
     rm: function (path) {
@@ -135,6 +141,34 @@ GDrive.prototype = {
                 path: '/drive/v2/files/' + fileToRemove.id,
                 method: 'DELETE'
             });
+        });
+    },
+
+    mkfile: function (path) {
+        // Lookup file
+        var me = this,
+            p = new Plite();
+
+        function createPathOnNotFound(name, parent, isLeaf) {
+            return me._createFile(name, parent, isLeaf ? 'application/vnd.google-apps.file' : undefined);
+        }
+
+        me._lookupPath(path).then(function () {
+            p.reject({ err: 'File "' + path + '" already exists' });
+        }).catch(function (err) {
+            me._lookupPath(path, createPathOnNotFound).then(function (result) {
+                p.resolve(result[result.length - 1]);
+            }).catch(function (err) {
+                p.reject(err);
+            })
+        });
+
+        return p;
+    },
+
+    openFile: function (path) {
+        return this._lookupPath(path).then(function (fullPath) {
+            return fullPath[fullPath.length - 1];
         });
     },
 
@@ -192,7 +226,7 @@ GDrive.prototype = {
             if (!onDirNotFound) {
                 p.reject(err);
             } else {
-                onDirNotFound(name, parent).then(function (file) {
+                onDirNotFound(name, parent, !pieces.length).then(function (file) {
                     currentPath.push(file);
                     crawl();
                 }).catch(function (err) {
@@ -235,8 +269,8 @@ GDrive.prototype = {
     _request: function (req) {
         var p = new Plite();
 
-        gapi.client._request(req).execute(function (result) {
-            if (result.error) {
+        gapi.client.request(req).execute(function (result) {
+            if (result && result.error) {
                 p.reject(result.error);
             } else {
                 p.resolve(result);

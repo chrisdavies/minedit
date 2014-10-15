@@ -7,15 +7,17 @@
 </head>
 <body>
     <div id="cmd-container" v-on="click: focusTextbox">
-        <cmd-editor v-if="appData.file != null"></cmd-editor>
-        <cmd-shell v-if="appData.file == null"></cmd-shell>
+        <div v-if="isRunningApp">
+            <div v-view="shellStatus.app.name" v-with="shellStatus"></div>
+        </div>
+        <cmd-shell v-if="!isRunningApp"></cmd-shell>
     </div>
 
-    <script type="text/html" id="cmd-editor-template">
+    <script type="text/html" id="file-editor-template">
         <div class="cmd-editor-container">
             <div class="cmd-editor">
-                <autosize-textarea v-with="val: file.content" v-on="keydown: exit | key esc,
-                                                                    keydown: detectSpecialInput"></autosize-textarea>
+                <autosize-textarea v-with="val: fileContent" v-on="keydown: exit | key esc,
+                                                                   keydown: detectSpecialInput"></autosize-textarea>
             </div>
         </div>
     </script>

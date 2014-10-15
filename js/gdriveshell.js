@@ -1,9 +1,14 @@
 ﻿SH.shell.fs = new GDrive('141185055134-7i2slat0itmurhsej47u72ba0tspjhdb.apps.googleusercontent.com');
+
+SH.shell.stdout.writeLine('Connecting to gdrive...');
+
 SH.shell.fs.init().then(function () {
     var ns = SH.shell,
         commands = ns.commands,
         fs = ns.fs,
         stdout = ns.stdout;
+
+    stdout.writeLine('Connected.')
 
     // ls
     commands.add({
@@ -14,8 +19,8 @@ SH.shell.fs.init().then(function () {
             description: 'The path to the directory whose contents are to be listed. If not specified, the current directory is used.'
         }],
 
-        execute: function (ctx) {
-            var path = ctx.get(1);
+        execute: function (args) {
+            var path = args.last();
             return fs.ls(path).then(function (files) {
                 if (files.length) {
                     stdout.writeLine();
@@ -53,10 +58,8 @@ SH.shell.fs.init().then(function () {
             required: true
         }],
 
-        execute: function (ctx) {
-            var path = ctx.get(1);
-
-            return fs.cd(path);
+        execute: function (args) {
+            return fs.cd(args.last());
         }
     });
 
@@ -70,10 +73,8 @@ SH.shell.fs.init().then(function () {
             required: true
         }],
 
-        execute: function (ctx) {
-            var path = ctx.get(1);
-
-            return fs.mkdir(path);
+        execute: function (args) {
+            return fs.mkdir(args.last());
         }
     });
 
@@ -87,10 +88,37 @@ SH.shell.fs.init().then(function () {
             required: true
         }],
 
-        execute: function (ctx) {
-            var path = ctx.get(1);
+        execute: function (args) {
+            return fs.rm(args.last());
+        }
+    });
 
-            return fs.rm(path);
+    // edit
+    commands.add({
+        name: 'edit',
+        description: 'Opens or creates a file and displays it in the editor',
+        params: [{
+            name: '-c',
+            description: 'Creates the file, errors if the file already exists'
+        }, {
+            name: 'path',
+            description: 'The path to the file to be created or opened',
+            required: true
+        }],
+
+        execute: function (args) {
+            var p,
+                path = args.last();
+
+            if (args.has('-c')) {
+                p = fs.mkfile(path);
+            } else {
+                p = fs.openFile(path);
+            }
+
+            return p.then(function (file) {
+                args.run('file-editor', { file: file, content: '' });
+            });
         }
     })
 });

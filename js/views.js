@@ -10,16 +10,17 @@
     });
 
     // Editor view
-    Vue.component('cmd-editor', {
-        template: '#cmd-editor-template',
+    Vue.component('file-editor', {
+        template: '#file-editor-template',
 
         ready: function () {
+            this.fileContent = this.app.file.title;
             setTimeout(focusTextbox, 10);
         },
 
         methods: {
             exit: function (e) {
-                // TODO: Exit editor
+                this.app = null;
             },
 
             detectSpecialInput: function (e) {
@@ -55,7 +56,7 @@
             setTimeout(focusTextbox, 10);
 
             me.$watch('shellStatus', function () {
-                 !me.shellStatus.running && Vue.nextTick(function () {
+                !me.shellStatus.running && Vue.nextTick(function () {
                     var txt = document.getElementsByTagName('textarea').item(0);
                     txt.focus();
                     txt.scrollIntoView(false);
@@ -95,6 +96,16 @@
     // Root view
     new Vue({
         el: '#cmd-container',
+
+        data: {
+            shellStatus: SH.shell.status,
+        },
+
+        computed: {
+            isRunningApp: function () {
+                return !!this.shellStatus.app;
+            }
+        },
 
         methods: {
             focusTextbox: focusTextbox
