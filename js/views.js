@@ -45,11 +45,18 @@
 
         data: {
             shellLines: SH.shell.stdout.buffer.buffer,
+            shellStatus: SH.shell.status,
             currentCommand: ''
         },
 
         ready: function () {
             setTimeout(focusTextbox, 10);
+            this.$watch('shellStatus', function () {
+                Vue.nextTick(function () {
+                    document.title = new Date().getTime();
+                    document.getElementsByTagName('textarea').item(0).scrollIntoView(false);
+                });
+            });
         },
 
         methods: {

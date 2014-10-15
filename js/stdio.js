@@ -165,14 +165,24 @@
         this.stdout = new Stdout(1000);
         this.history = new ShellHistory(10);
         this.commands = new ShellEnvironment();
-        this.pad = pad;
+        this.pad = pad; // TODO: should really go in the stdout
+        this.status = {
+            running: false
+        };
     }
 
     Shell.prototype = {
         run: function () {
             var me = this;
 
+            function inputProcessed() {
+                me.status.running = false;
+                me.stdin.readLine(processInput);
+            }
+
             function processInput(line) {
+                me.status.running = true;
+
                 // Write the command to the terminal
                 me.stdout.writeLine('$ ' + line);
 
@@ -191,15 +201,18 @@
                     } else {
                         // Execute the command
                         var p = cmd.execute(args);
-                        if (p && p.catch) {
-                            p.catch(function (result) {
+
+                        if (p && p.catch && p.then) {
+                            return p.catch(function (result) {
                                 me.stdout.writeLine(result.err || result, 'red');
+                            }).finally(function () {
+                                inputProcessed();
                             });
                         }
                     }
                 }
 
-                me.stdin.readLine(processInput);
+                inputProcessed();
             }
 
             this.stdin.readLine(processInput);
