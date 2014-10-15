@@ -19,7 +19,7 @@ SH.shell.fs.init().then(function () {
             return fs.ls(path).then(function (files) {
                 if (files.length) {
                     stdout.writeLine();
-                    stdout.writeLine('    Directory: ' + path);
+                    stdout.writeLine('    Directory: ' + (path || fs.pwd()));
                     stdout.writeLine();
                     stdout.writeLine(stdout.pad('Type', 7) + ' ' + stdout.pad('Name', 25));
                     stdout.writeLine(stdout.pad('----', 7) + ' ' + stdout.pad('----', 25));
