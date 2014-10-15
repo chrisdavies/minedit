@@ -41,7 +41,7 @@
         assert.equal(actual.length, expected.length);
 
         for (var i = 0; i < actual.length; ++i) {
-            assert.equal(expected[i].toString(), actual[i].toString());
+            assert.equal(expected[i].toString(), actual[i].value);
         }
     });
 
@@ -53,10 +53,10 @@
 
         var buffer = stdout.buffer.buffer;
 
-        assert.equal(buffer[0].toString(), 'G');
+        assert.equal(buffer[0].value, 'G');
         assert.equal(buffer[0].color, 'green');
 
-        assert.equal(buffer[1].toString(), 'Default');
+        assert.equal(buffer[1].value, 'Default');
         assert.equal(buffer[1].color, undefined);
     });
 
