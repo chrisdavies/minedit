@@ -50,11 +50,15 @@
         },
 
         ready: function () {
+            var me = this;
+
             setTimeout(focusTextbox, 10);
-            this.$watch('shellStatus', function () {
-                Vue.nextTick(function () {
-                    document.title = new Date().getTime();
-                    document.getElementsByTagName('textarea').item(0).scrollIntoView(false);
+
+            me.$watch('shellStatus', function () {
+                 !me.shellStatus.running && Vue.nextTick(function () {
+                    var txt = document.getElementsByTagName('textarea').item(0);
+                    txt.focus();
+                    txt.scrollIntoView(false);
                 });
             });
         },

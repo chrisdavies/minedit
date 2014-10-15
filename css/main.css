@@ -95,9 +95,21 @@ textarea {
     margin-left: 1em;
 }
 
+.cmd-prompt.processing {
+    color: aqua;
+}
+
+.cmd-prompt.processing textarea {
+    visibility: hidden;
+}
+
 .cmd-prompt::before {
     content: '$';
     position: absolute;
     top: 0;
     left: -1em;
+}
+
+.cmd-prompt.processing::before {
+    content: '...';
 }

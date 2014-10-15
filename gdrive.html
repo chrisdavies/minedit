@@ -25,7 +25,7 @@
             <div class="cmd-lines">
 <div v-repeat="line: shellLines"><div class="cmd-line" v-style="color: line.color">{{line.value}}</div></div>
             </div>
-            <div class="cmd-prompt">
+            <div class="cmd-prompt" v-class="processing: shellStatus.running">
                 <autosize-textarea v-on="keydown: feedLine | key enter,
                                      keydown: autoComplete | key tab,
                                      keydown: cancelCommand | key esc,
