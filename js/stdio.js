@@ -66,7 +66,7 @@
         writeLine: function (line, color) {
             this.buffer.push({
                 color: color,
-                value: line,
+                value: line || ' ',
             });
         },
 

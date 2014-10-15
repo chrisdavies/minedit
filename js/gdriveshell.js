@@ -14,6 +14,9 @@ SH.shell.fs.init().then(function () {
             var path = ctx.get(1);
             return fs.ls(path).then(function (files) {
                 if (files.length) {
+                    ns.stdout.writeLine();
+                    ns.stdout.writeLine('    Directory: ' + fs.pwd());
+                    ns.stdout.writeLine();
                     ns.stdout.writeLine(ns.pad('Type', 7) + ' ' + ns.pad('Name', 25));
                     ns.stdout.writeLine(ns.pad('----', 7) + ' ' + ns.pad('----', 25));
 
