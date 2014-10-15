@@ -47,29 +47,29 @@ GDrive.prototype = {
 
         // Load the root folder
         function loadRootFolder() {
-            gapi.client.request({
+            me.request({
                 'path': 'drive/v2/files/root',
                 'method': 'GET',
                 'params': {
                     'trashed': 'false'
                 }
-            }).execute(function (result) {
-                p.resolve(result);
+            }).then(function (rootFolder) {
+                me.currentPath.push(me.rootFolder = rootFolder);
+                p.resolve(rootFolder);
+            }).catch(function (err) {
+                p.reject(err);
             });
         }
-
-        p.then(function (rootFolder) {
-            console.log('resolved!!!');
-            me.currentPath.push(me.rootFolder = rootFolder);
-        });
 
         return p;
     },
 
-    ls: function () {
-        var p = new Plite(),
-            dir = this.currentPath[this.currentPath.length - 1],
-            request = gapi.client.request({
+    ls: function (path) {
+        var me = this;
+
+        return this.lookupPath(path).then(function (expandedPath) {
+            var dir = expandedPath[expandedPath.length - 1];
+            return me.request({
                 'path': 'drive/v2/files',
                 'method': 'GET',
                 'params': {
@@ -78,36 +78,29 @@ GDrive.prototype = {
                     'maxResults': '100'
                 }
             });
-
-        request.execute(function (result) {
-            if (result.error) {
-                p.reject(result);
-            } else {
-                p.resolve((result.items || []).map(function (i) {
-                    return {
-                        name: i.title,
-                        type: i.mimeType == 'application/vnd.google-apps.folder' ? 'dir' : 'fil',
-                        id: i.id
-                    };
-                }).sort(function (a, b) {
-                    if (a.type != b.type) {
-                        if (a.type == 'dir') {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
-                    }
-
-                    if (a.name < b.name) {
+        }).then(function(result) {
+            return (result.items || []).map(function (i) {
+                return {
+                    name: i.title,
+                    type: i.mimeType == 'application/vnd.google-apps.folder' ? 'dir' : 'fil',
+                    id: i.id
+                };
+            }).sort(function (a, b) {
+                if (a.type != b.type) {
+                    if (a.type == 'dir') {
                         return -1;
                     } else {
                         return 1;
                     }
-                }));
-            }
-        });
+                }
 
-        return p;
+                if (a.name < b.name) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+        });
     },
 
     cd: function (path) {
@@ -123,65 +116,30 @@ GDrive.prototype = {
     },
 
     mkdir: function (path) {
-        var p = new Plite(),
-            root = this.rootFolder,
-            pieces = path.split(/[\\\/]/).filter(function (p) { return p.length; }),
-            currentPath = this.currentPath.slice(),
-            me = this;
+        var me = this;
 
-        function crawl() {
-            var name = pieces.shift();
-
-            if (name == '..') {
-                currentPath.pop();
-            } else {
-                var parent = currentPath[currentPath.length - 1];
-
-                function pushFolder(folder) {
-                    currentPath.push(folder);
-
-                    if (pieces.length) {
-                        crawl();
-                    } else {
-                        p.resolve(currentPath);
-                    }
-                }
-
-                me.getFile(name, parent).then(pushFolder).catch(function (err) {
-                    // Folder doesn't exist: create it
-                    me.createFile(name, parent).then(pushFolder).catch(function (err) {
-                        p.reject(err);
-                    })
-                });
-            }
+        function onDirNotFound(name, parent) {
+            return me.createFile(name, parent);
         }
 
-        crawl();
-
-        return p;
+        return me.lookupPath(path, onDirNotFound);
     },
 
     rm: function (path) {
-        this.lookupPath(path).then(function (expandedPath) {
-            var file = expandedPath[expandedPath.length - 1],
-                p = new Plite();
+        var me = this;
 
-            gapi.client.request({
-                path: '/drive/v2/files/' + file.id,
+        return this.lookupPath(path).then(function (expandedPath) {
+            var fileToRemove = expandedPath[expandedPath.length - 1];
+
+            return me.request({
+                path: '/drive/v2/files/' + fileToRemove.id,
                 method: 'DELETE'
-            }).execute(function (response) {
-                console.log('rm result ', response);
-                p.resolve(response);
             });
-
-            return p;
         });
     },
 
     createFile: function (name, parent, mimeType) {
-        var p = new Plite();
-        console.log('Creating ' + name + ' with parent', parent);
-        gapi.client.request({
+        return this.request({
             path: '/drive/v2/files/',
             method: 'POST',
             body: {
@@ -192,15 +150,7 @@ GDrive.prototype = {
                     id: parent.id
                 }]
             }
-        }).execute(function (result) {
-            if (result.error) {
-                p.reject({ err: result.error });
-            } else {
-                p.resolve(result);
-            }
         });
-
-        return p;
     },
 
     getFile: function (name, parent) {
@@ -224,11 +174,8 @@ GDrive.prototype = {
         return p;
     },
 
-    pushPath: function (dir) {
-        this.currentPath.push(dir);
-    },
-
-    lookupPath: function (path) {
+    lookupPath: function (path, onDirNotFound) {
+        path = path || '';
         var p = new Plite(),
             me = this,
             root = me.rootFolder,
@@ -243,19 +190,36 @@ GDrive.prototype = {
             }
         }
 
+        function fileLoadError(name, parent, err) {
+            if (!onDirNotFound) {
+                p.reject(err);
+            } else {
+                onDirNotFound(name, parent).then(function (file) {
+                    currentPath.push(file);
+                    crawl();
+                }).catch(function (err) {
+                    p.reject(err);
+                });
+            }
+        }
+
         function loadFile(name) {
-            me.getFile(name, currentPath[currentPath.length - 1]).then(function (file) {
+            var parent = currentPath[currentPath.length - 1];
+
+            me.getFile(name, parent).then(function (file) {
                 currentPath.push(file);
                 crawl();
             }).catch(function (err) {
-                p.reject(err);
+                fileLoadError(name, parent, err);
             });
         }
 
         function crawl() {
-            var name = pieces.pop();
+            var name = pieces.shift();
 
-            if (!name || !currentPath.length) {
+            if (name == '.') {
+                crawl();
+            } else if (!name || !currentPath.length) {
                 resolve();
             } else if (name == '..') {
                 currentPath.pop();
@@ -266,6 +230,20 @@ GDrive.prototype = {
         }
 
         crawl();
+
+        return p;
+    },
+
+    request: function (req) {
+        var p = new Plite();
+
+        gapi.client.request(req).execute(function (result) {
+            if (result.error) {
+                p.reject(result.error);
+            } else {
+                p.resolve(result);
+            }
+        });
 
         return p;
     }

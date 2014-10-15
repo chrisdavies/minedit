@@ -13,12 +13,14 @@ SH.shell.fs.init().then(function () {
         execute: function (ctx) {
             var path = ctx.get(1);
             return fs.ls(path).then(function (files) {
-                ns.stdout.writeLine(ns.pad('Type', 7) + ' ' + ns.pad('Name', 25));
-                ns.stdout.writeLine(ns.pad('----', 7) + ' ' + ns.pad('----', 25));
+                if (files.length) {
+                    ns.stdout.writeLine(ns.pad('Type', 7) + ' ' + ns.pad('Name', 25));
+                    ns.stdout.writeLine(ns.pad('----', 7) + ' ' + ns.pad('----', 25));
 
-                for (var i = 0; i < files.length; ++i) {
-                    var file = files[i];
-                    ns.stdout.writeLine(ns.pad(file.type, 7) + ' ' + files[i].name);
+                    for (var i = 0; i < files.length; ++i) {
+                        var file = files[i];
+                        ns.stdout.writeLine(ns.pad(file.type, 7) + ' ' + files[i].name);
+                    }
                 }
             });
         }

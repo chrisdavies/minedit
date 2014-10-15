@@ -64,12 +64,10 @@
 
     Stdout.prototype = {
         writeLine: function (line, color) {
-            this.buffer.push(color ? {
+            this.buffer.push({
                 color: color,
-                toString: function () {
-                    return line;
-                }
-            } : line);
+                value: line,
+            });
         },
 
         clear: function () {
@@ -189,10 +187,15 @@
                     var cmd = me.commands.get(args.get(0));
 
                     if (!cmd) {
-                        me.stdout.writeLine('Could not find ' + args.get(0));
+                        me.stdout.writeLine('Unrecognized command: ' + args.get(0));
                     } else {
                         // Execute the command
-                        cmd.execute(args);
+                        var p = cmd.execute(args);
+                        if (p && p.catch) {
+                            p.catch(function (result) {
+                                me.stdout.writeLine(result.err || result, 'red');
+                            });
+                        }
                     }
                 }
 
