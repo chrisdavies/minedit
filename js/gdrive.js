@@ -47,7 +47,7 @@ GDrive.prototype = {
 
         // Load the root folder
         function loadRootFolder() {
-            me.request({
+            me._request({
                 'path': 'drive/v2/files/root',
                 'method': 'GET',
                 'params': {
@@ -67,9 +67,9 @@ GDrive.prototype = {
     ls: function (path) {
         var me = this;
 
-        return this.lookupPath(path).then(function (expandedPath) {
+        return this._lookupPath(path).then(function (expandedPath) {
             var dir = expandedPath[expandedPath.length - 1];
-            return me.request({
+            return me._request({
                 'path': 'drive/v2/files',
                 'method': 'GET',
                 'params': {
@@ -106,7 +106,7 @@ GDrive.prototype = {
     cd: function (path) {
         var me = this;
 
-        return this.lookupPath(path).then(function (currentPath) {
+        return this._lookupPath(path).then(function (currentPath) {
             me.currentPath = currentPath;
         });
     },
@@ -119,27 +119,27 @@ GDrive.prototype = {
         var me = this;
 
         function onDirNotFound(name, parent) {
-            return me.createFile(name, parent);
+            return me._createFile(name, parent);
         }
 
-        return me.lookupPath(path, onDirNotFound);
+        return me._lookupPath(path, onDirNotFound);
     },
 
     rm: function (path) {
         var me = this;
 
-        return this.lookupPath(path).then(function (expandedPath) {
+        return this._lookupPath(path).then(function (expandedPath) {
             var fileToRemove = expandedPath[expandedPath.length - 1];
 
-            return me.request({
+            return me._request({
                 path: '/drive/v2/files/' + fileToRemove.id,
                 method: 'DELETE'
             });
         });
     },
 
-    createFile: function (name, parent, mimeType) {
-        return this.request({
+    _createFile: function (name, parent, mimeType) {
+        return this._request({
             path: '/drive/v2/files/',
             method: 'POST',
             body: {
@@ -153,28 +153,26 @@ GDrive.prototype = {
         });
     },
 
-    getFile: function (name, parent) {
-        var p = new Plite();
-
-        gapi.client.request({
+    _getFile: function (name, parent) {
+        return this._request({
             'path': 'drive/v2/files',
             'method': 'GET',
             'params': {
                 'trashed': 'false',
                 'q': "title='" + name + "' and '" + parent.id + "' in parents"
             }
-        }).execute(function (result) {
+        }).then(function (result) {
             if (!result.items || !result.items.length) {
-                p.reject({ err: 'Could not find "' + name + '"' });
-            } else {
-                p.resolve(result.items[0]);
+                throw { err: 'Could not find "' + name + '"' };
             }
+
+            return result.items[0];
         });
 
         return p;
     },
 
-    lookupPath: function (path, onDirNotFound) {
+    _lookupPath: function (path, onDirNotFound) {
         path = path || '';
         var p = new Plite(),
             me = this,
@@ -206,7 +204,7 @@ GDrive.prototype = {
         function loadFile(name) {
             var parent = currentPath[currentPath.length - 1];
 
-            me.getFile(name, parent).then(function (file) {
+            me._getFile(name, parent).then(function (file) {
                 currentPath.push(file);
                 crawl();
             }).catch(function (err) {
@@ -234,10 +232,10 @@ GDrive.prototype = {
         return p;
     },
 
-    request: function (req) {
+    _request: function (req) {
         var p = new Plite();
 
-        gapi.client.request(req).execute(function (result) {
+        gapi.client._request(req).execute(function (result) {
             if (result.error) {
                 p.reject(result.error);
             } else {
