@@ -204,14 +204,18 @@
                         me.stdout.writeLine('Unrecognized command: ' + args.get(0));
                     } else {
                         // Execute the command
-                        var p = cmd.execute(args);
+                        try {
+                            var p = cmd.execute(args);
 
-                        if (p && p.catch && p.then) {
-                            return p.catch(function (result) {
-                                me.stdout.writeLine(result.err || result, 'red');
-                            }).finally(function () {
-                                inputProcessed();
-                            });
+                            if (p && p.catch && p.then) {
+                                return p.catch(function (result) {
+                                    me.stdout.writeLine(result.err || result, 'red');
+                                }).finally(function () {
+                                    inputProcessed();
+                                });
+                            }
+                        } catch (err) {
+                            me.stdout.writeLine(err, 'red');
                         }
                     }
                 }
