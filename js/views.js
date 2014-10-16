@@ -1,7 +1,13 @@
 ﻿(function (ns) {
     
     function focusTextbox() {
-        document.getElementsByTagName('textarea').item(0).focus();
+        var tas = document.getElementsByTagName('textarea');
+
+        if (tas.length) {
+            var txt = tas.item(0);
+            txt.focus();
+            txt.scrollIntoView(false);
+        }
     }
 
     // Autosize textarea directive
@@ -14,7 +20,6 @@
         template: '#file-editor-template',
 
         ready: function () {
-            this.fileContent = this.app.file.title;
             setTimeout(focusTextbox, 10);
         },
 
@@ -56,11 +61,7 @@
             setTimeout(focusTextbox, 10);
 
             me.$watch('shellStatus', function () {
-                !me.shellStatus.running && Vue.nextTick(function () {
-                    var txt = document.getElementsByTagName('textarea').item(0);
-                    txt.focus();
-                    txt.scrollIntoView(false);
-                });
+                !me.shellStatus.running && Vue.nextTick(focusTextbox);
             });
         },
 

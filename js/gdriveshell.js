@@ -116,8 +116,21 @@ SH.shell.fs.init().then(function () {
                 p = fs.openFile(path);
             }
 
-            return p.then(function (file) {
-                args.run('file-editor', { file: file, content: '' });
+            var file;
+
+            return p.then(function (f) {
+                file = f;
+                var myToken = gapi.auth.getToken();
+                return Alite.get(f.downloadUrl, { 'Authorization': 'Bearer ' + myToken.access_token });
+            }).then(function (content) {
+                console.log('Got ', content);
+                args.run('file-editor', {
+                    file: {
+                        name: file.title,
+                        id: file.id
+                    },
+                    content: content.data
+                });
             });
         }
     })

@@ -16,8 +16,8 @@
     <script type="text/html" id="file-editor-template">
         <div class="cmd-editor-container">
             <div class="cmd-editor">
-                <autosize-textarea v-with="val: fileContent" v-on="keydown: exit | key esc,
-                                                                   keydown: detectSpecialInput"></autosize-textarea>
+                <autosize-textarea v-with="val: app.data.content" v-on="keydown: exit | key esc,
+                                                                 keydown: detectSpecialInput"></autosize-textarea>
             </div>
         </div>
     </script>
@@ -29,10 +29,10 @@
             </div>
             <div class="cmd-prompt" v-class="processing: shellStatus.running">
                 <autosize-textarea v-on="keydown: feedLine | key enter,
-                                     keydown: autoComplete | key tab,
-                                     keydown: cancelCommand | key esc,
-                                     keydown: historyUp | key up,
-                                     keydown: historyDown | key down"
+                                         keydown: autoComplete | key tab,
+                                         keydown: cancelCommand | key esc,
+                                         keydown: historyUp | key up,
+                                         keydown: historyDown | key down"
                                    v-with="val: currentCommand"></autosize-textarea>
             </div>
         </div>
@@ -41,6 +41,7 @@
     <script src="https://apis.google.com/js/client.js?onload=gdriveready"></script>
     <script src="js/vue.min.js"></script>
     <script src="js/plite.js"></script>
+    <script src="js/alite.js"></script>
     <script src="js/gdrive.js"></script>
     <script src="js/shell.js"></script>
     <script src="js/gdriveshell.js"></script>

@@ -121,7 +121,7 @@ GDrive.prototype = {
 
         function onDirNotFound(name, parent) {
             exists = false;
-            return me._createFile(name, parent);
+            return me._createDir(name, parent);
         }
 
         return me._lookupPath(path, onDirNotFound).then(function () {
@@ -144,13 +144,16 @@ GDrive.prototype = {
         });
     },
 
-    mkfile: function (path) {
-        // Lookup file
+    mkfile: function (path, content) {
         var me = this,
             p = new Plite();
 
         function createPathOnNotFound(name, parent, isLeaf) {
-            return me._createFile(name, parent, isLeaf ? 'application/vnd.google-apps.file' : undefined);
+            if (!isLeaf) {
+                return me._createDir(name, parent);
+            } else {
+                return me._createFile(name, parent, content);
+            }
         }
 
         me._lookupPath(path).then(function () {
@@ -166,19 +169,98 @@ GDrive.prototype = {
         return p;
     },
 
+    saveFile: function (path, content) {
+        var me = this;
+
+        return me._lookupPath(path).then(function (result) {
+            console.log('Updating ', result);
+            return me._updateFile(result[result.length - 1].id, content);
+        });
+    },
+
     openFile: function (path) {
         return this._lookupPath(path).then(function (fullPath) {
             return fullPath[fullPath.length - 1];
         });
     },
 
-    _createFile: function (name, parent, mimeType) {
+    _updateFile: function (id, contents) {
+        contents = contents || '';
+
+        const boundary = '-------314159265358979323846',
+            delimiter = '\r\n--' + boundary + '\r\n',
+            closeDelimiter = '\r\n--' + boundary + '--';
+
+        var contentType = 'text/plain';
+
+        metadata = {
+            mimeType: contentType
+        };
+
+        var body =
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            JSON.stringify(metadata) +
+            delimiter +
+            'Content-Type: ' + contentType + '\r\n' +
+            'Content-Transfer-Encoding: base64\r\n' +
+            '\r\n' +
+            btoa(contents) +
+            closeDelimiter;
+
+        return this._request({
+            'path': '/upload/drive/v2/files/' + id,
+            'method': 'PUT',
+            'params': { 'uploadType': 'multipart' },
+            'headers': {
+                'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+            },
+            'body': body
+        });
+    },
+
+    _createFile: function (name, parent, contents) {
+        contents = contents || 'New file...';
+
+        const boundary = '-------314159265358979323846',
+            delimiter = '\r\n--' + boundary + '\r\n',
+            closeDelimiter = '\r\n--' + boundary + '--';
+
+        var contentType = 'text/plain',
+            metadata = {
+                title: name,
+                mimeType: contentType
+            };
+
+        var body = 
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            JSON.stringify(metadata) +
+            delimiter +
+            'Content-Type: ' + contentType + '\r\n' +
+            'Content-Transfer-Encoding: base64\r\n' +
+            '\r\n' +
+            btoa(contents) +
+            closeDelimiter;
+
+        return this._request({
+            'path': '/upload/drive/v2/files',
+            'method': 'POST',
+            'params': { 'uploadType': 'multipart' },
+            'headers': {
+                'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+            },
+            'body': body
+        });
+    },
+
+    _createDir: function (name, parent) {
         return this._request({
             path: '/drive/v2/files/',
             method: 'POST',
             body: {
                 title: name,
-                mimeType: mimeType || 'application/vnd.google-apps.folder',
+                mimeType: 'application/vnd.google-apps.folder',
                 parents: [{
                     kind: 'drive#file',
                     id: parent.id
