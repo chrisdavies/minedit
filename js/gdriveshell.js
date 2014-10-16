@@ -123,7 +123,6 @@ SH.shell.fs.init().then(function () {
                 var myToken = gapi.auth.getToken();
                 return Alite.get(f.downloadUrl, { 'Authorization': 'Bearer ' + myToken.access_token });
             }).then(function (content) {
-                console.log('Got ', content);
                 args.run('file-editor', {
                     file: {
                         name: file.title,

@@ -220,7 +220,7 @@ GDrive.prototype = {
     },
 
     _createFile: function (name, parent, contents) {
-        contents = contents || 'New file...';
+        contents = contents || '';
 
         const boundary = '-------314159265358979323846',
             delimiter = '\r\n--' + boundary + '\r\n',
