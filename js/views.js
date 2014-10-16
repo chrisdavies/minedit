@@ -31,7 +31,13 @@
             detectSpecialInput: function (e) {
                 if (e.ctrlKey && e.which == 83) { // Ctrl + S 
                     e.preventDefault();
-                    // TODO: Save
+                    var data = this.app.data;
+                    ns.fs.saveFile(data.file.id, data.content).then(function() {
+                        document.title = 'Saved ' + new Date().toLocaleTimeString();
+                    }).catch(function (err) {
+                        console.log(err);
+                        alert('Failed to save. See console.log for details.');
+                    });
                 } else if (e.which == 9) { // Tab
                     e.preventDefault();
                     var ta = this.$el.querySelector('textarea'),

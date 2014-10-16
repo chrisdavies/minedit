@@ -169,13 +169,8 @@ GDrive.prototype = {
         return p;
     },
 
-    saveFile: function (path, content) {
-        var me = this;
-
-        return me._lookupPath(path).then(function (result) {
-            console.log('Updating ', result);
-            return me._updateFile(result[result.length - 1].id, content);
-        });
+    saveFile: function (fileId, content) {
+        return this._updateFile(fileId, content);
     },
 
     openFile: function (path) {
