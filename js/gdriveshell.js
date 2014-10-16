@@ -54,8 +54,7 @@ SH.shell.fs.init().then(function () {
         description: 'Change directory to the specified path',
         params: [{
             name: 'path',
-            description: 'The path to the directory',
-            required: true
+            description: 'The path to the directory'
         }],
 
         execute: function (args) {

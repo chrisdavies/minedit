@@ -129,13 +129,11 @@
         this.command = this.params.shift();
 
         this.app = undefined;
+
+        this.length = this.params.length;
     }
 
     ShellCommand.prototype = {
-        size: function () {
-            return this.params.length;
-        },
-
         get: function (i) {
             return this.params[i];
         },
@@ -201,6 +199,26 @@
                 me.stdin.readLine(processInput);
             }
 
+            function writeErr(err) {
+                me.stdout.writeLine(err.err || err, 'red');
+            }
+
+            function validate(args, cmd) {
+                if (!cmd) {
+                    writeErr('Unrecognized command: ' + args.command);
+                    return false;
+                }
+
+                var requiredParams = (cmd.params || []).filter(function (p) { return p.required; });
+                if (requiredParams.length > args.length) {
+                    writeErr(args.command + ': requires the following arguments - ' + requiredParams.map(function (p) { return p.name; }).join(', '));
+                    writeErr('Try "man ' + args.command + '" for more information.');
+                    return false;
+                }
+
+                return true;
+            }
+
             function processInput(line) {
                 me.status.running = true;
 
@@ -217,22 +235,22 @@
                 if (args.command) {
                     var cmd = me.commands.get(args.command);
 
-                    if (!cmd) {
-                        me.stdout.writeLine('Unrecognized command: ' + args.command);
-                    } else {
+                    if (validate(args, cmd)) {
                         // Execute the command
                         try {
                             var p = cmd.execute(args);
 
-                            if (p && p.catch && p.then) {
-                                return p.catch(function (result) {
-                                    me.stdout.writeLine(result.err || result, 'red');
-                                }).finally(function () {
-                                    inputProcessed(args);
-                                });
+                            if (p) {
+                                if (p.catch && p.then) {
+                                    return p.catch(writeErr).finally(function () {
+                                        inputProcessed(args);
+                                    });
+                                } else if (p.err) {
+                                    writeErr(p);
+                                }
                             }
                         } catch (err) {
-                            me.stdout.writeLine(err, 'red');
+                            writeErr(err);
                         }
                     }
                 }
@@ -287,17 +305,15 @@
         name: 'man',
         description: 'Display usage manual for the specified command',
         params: [{
-            name: 'command',
-            required: true
+            name: 'command'
         }],
 
         execute: function (args) {
-            var cmdName = args.last(),
+            var cmdName = args.last() || 'man',
                 cmd = shell.commands.get(cmdName);
 
             if (!cmd) {
-                stdout.writeLine('Could not find command: ' + cmdName, 'red');
-                return;
+                return { err: 'Could not find command: ' + cmdName };
             }
 
             var params = cmd.params || [];
