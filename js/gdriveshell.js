@@ -8,7 +8,7 @@ SH.shell.fs.init().then(function () {
         fs = ns.fs,
         stdout = ns.stdout;
 
-    stdout.writeLine('Connected.')
+    stdout.writeLine('Connected.');
 
     // ls
     commands.add({

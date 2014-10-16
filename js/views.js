@@ -1,5 +1,5 @@
 ﻿(function (ns) {
-    
+
     function focusTextbox() {
         var tas = document.getElementsByTagName('textarea');
 
@@ -20,6 +20,7 @@
         template: '#file-editor-template',
 
         ready: function () {
+            this.setTitle();
             setTimeout(focusTextbox, 10);
         },
 
@@ -28,25 +29,42 @@
                 this.app = null;
             },
 
+            setTitle: function (prefix) {
+                document.title = (prefix || '') + this.app.data.file.name;
+            },
+
             detectSpecialInput: function (e) {
                 if (e.ctrlKey && e.which == 83) { // Ctrl + S 
-                    e.preventDefault();
-                    var data = this.app.data;
-                    ns.fs.saveFile(data.file.id, data.content).then(function() {
-                        document.title = 'Saved ' + new Date().toLocaleTimeString();
-                    }).catch(function (err) {
-                        console.log(err);
-                        alert('Failed to save. See console.log for details.');
-                    });
+                    this.save(e);
                 } else if (e.which == 9) { // Tab
-                    e.preventDefault();
-                    var ta = this.$el.querySelector('textarea'),
-                        start = ta.selectionStart,
-                        end = ta.selectionEnd;
-
-                    ta.value = ta.value.substring(0, start) + '\t' + ta.value.substring(end);
-                    ta.selectionStart = ta.selectionEnd = (start + 1);
+                    this.insertTab(e);
                 }
+            },
+
+            insertTab: function (e) {
+                e.preventDefault();
+                var ta = this.$el.querySelector('textarea'),
+                    start = ta.selectionStart,
+                    end = ta.selectionEnd;
+
+                ta.value = ta.value.substring(0, start) + '\t' + ta.value.substring(end);
+                ta.selectionStart = ta.selectionEnd = (start + 1);
+            },
+
+            save: function (e) {
+                e.preventDefault();
+
+                var me = this,
+                    data = me.app.data;
+
+                me.setTitle('Saving... ');
+
+                ns.fs.saveFile(data.file.id, data.content).then(function () {
+                    me.setTitle();
+                }).catch(function (err) {
+                    console.log(err);
+                    alert('Failed to save. See console.log for details.');
+                });
             }
         }
     });
@@ -65,6 +83,7 @@
             var me = this;
 
             setTimeout(focusTextbox, 10);
+            document.title = 'MinEdit $shell';
 
             me.$watch('shellStatus', function () {
                 !me.shellStatus.running && Vue.nextTick(focusTextbox);
