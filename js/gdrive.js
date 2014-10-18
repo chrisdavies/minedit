@@ -15,12 +15,36 @@ GDrive.prototype = {
             function waitForGapi() {
                 if (gapi && gapi.auth) {
                     clearInterval(interval);
-                    checkAuth();
+                    runAuth();
                 }
             }
 
             interval = setInterval(waitForGapi, 10);
         })();
+
+        function runAuth() {
+            me.authenticate().then(function () {
+                return me._request({
+                    'path': 'drive/v2/files/root',
+                    'method': 'GET',
+                    'params': {
+                        'trashed': 'false'
+                    }
+                });
+            }).then(function (rootFolder) {
+                me.currentPath.push(me.rootFolder = rootFolder);
+                p.resolve(rootFolder);
+            }).catch(function (err) {
+                p.reject(err);
+            });
+        }
+
+        return p;
+    },
+
+    authenticate: function () {
+        var p = new Plite(),
+            me = this;
 
         // Check authorization
         function checkAuth() {
@@ -34,7 +58,7 @@ GDrive.prototype = {
 
         function handleAuthResult(authResult) {
             if (authResult && !authResult.error) {
-                loadRootFolder();
+                p.resolve(authResult);
             } else {
                 gapi.auth.authorize({
                     'client_id': me.clientId,
@@ -45,21 +69,7 @@ GDrive.prototype = {
             }
         }
 
-        // Load the root folder
-        function loadRootFolder() {
-            me._request({
-                'path': 'drive/v2/files/root',
-                'method': 'GET',
-                'params': {
-                    'trashed': 'false'
-                }
-            }).then(function (rootFolder) {
-                me.currentPath.push(me.rootFolder = rootFolder);
-                p.resolve(rootFolder);
-            }).catch(function (err) {
-                p.reject(err);
-            });
-        }
+        checkAuth();
 
         return p;
     },
@@ -343,12 +353,19 @@ GDrive.prototype = {
         return p;
     },
 
-    _request: function (req) {
-        var p = new Plite();
+    _request: function (req, authAttempt, p) {
+        var p = p || new Plite(),
+            me = this;
 
         gapi.client.request(req).execute(function (result) {
             if (result && result.error) {
-                p.reject(result.error);
+                if (result.error.code == 401 && !authAttempt) {
+                    me.authenticate().then(function () {
+                        return me._request(req, 1, p);
+                    });
+                } else {
+                    p.reject(result.error);
+                }
             } else {
                 p.resolve(result);
             }
