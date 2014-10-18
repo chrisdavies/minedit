@@ -138,14 +138,14 @@
     QUnit.test('strips quotes from parameters', function (assert) {
         var cmd = new SH.ShellCommand('cd "hello/world"');
 
-        assert.equal(cmd.params.length, 2);
-        assert.equal(cmd.params[0], 'cd');
-        assert.equal(cmd.params[1], 'hello/world');
+        assert.equal(cmd.params.length, 1);
+        assert.equal(cmd.command, 'cd');
+        assert.equal(cmd.last(), 'hello/world');
     });
 
     QUnit.test('handles multiple parameters', function (assert) {
         var cmd = new SH.ShellCommand('hello world and everyone'),
-            expected = ['hello', 'world', 'and', 'everyone'];
+            expected = ['world', 'and', 'everyone'];
 
         assert.equal(cmd.params.length, expected.length);
 
