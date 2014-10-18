@@ -223,6 +223,7 @@
                 me.status.running = true;
 
                 // Write the command to the terminal
+                me.stdout.writeLine();
                 me.stdout.writeLine('$ ' + line);
 
                 // Write the command to the history
