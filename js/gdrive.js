@@ -202,33 +202,37 @@
             });
         },
 
-        _updateFile: function (id, contents) {
-            contents = contents || '';
-
+        _writeFile: function (file) {
             const boundary = '-------314159265358979323846',
                 delimiter = '\r\n--' + boundary + '\r\n',
                 closeDelimiter = '\r\n--' + boundary + '--';
 
-            var contentType = 'text/plain';
+            var contentType = 'text/plain',
+                content = file.content || '',
+                metadata = {
+                    mimeType: contentType
+                };
 
-            metadata = {
-                mimeType: contentType
-            };
+            file.name && (metadata.title = file.name);
+            file.parent && (metadata.parents = [{
+                kind: 'drive#file',
+                id: file.parent.id
+            }]);
 
             var body =
-                delimiter +
-                'Content-Type: application/json\r\n\r\n' +
-                JSON.stringify(metadata) +
-                delimiter +
-                'Content-Type: ' + contentType + '\r\n' +
-                'Content-Transfer-Encoding: base64\r\n' +
-                '\r\n' +
-                utf8_to_b64(contents) +
-                closeDelimiter;
+                   delimiter +
+                   'Content-Type: application/json\r\n\r\n' +
+                   JSON.stringify(metadata) +
+                   delimiter +
+                   'Content-Type: ' + contentType + '\r\n' +
+                   'Content-Transfer-Encoding: base64\r\n' +
+                   '\r\n' +
+                   utf8_to_b64(content) +
+                   closeDelimiter;
 
             return this._request({
-                'path': '/upload/drive/v2/files/' + id,
-                'method': 'PUT',
+                'path': '/upload/drive/v2/files/' + (file.id || ''),
+                'method': file.id ? 'PUT' : 'POST',
                 'params': { 'uploadType': 'multipart' },
                 'headers': {
                     'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
@@ -237,38 +241,18 @@
             });
         },
 
-        _createFile: function (name, parent, contents) {
-            contents = contents || '';
+        _updateFile: function (id, content) {
+            return this._writeFile({
+                id: id,
+                content: content
+            });
+        },
 
-            const boundary = '-------314159265358979323846',
-                delimiter = '\r\n--' + boundary + '\r\n',
-                closeDelimiter = '\r\n--' + boundary + '--';
-
-            var contentType = 'text/plain',
-                metadata = {
-                    title: name,
-                    mimeType: contentType
-                };
-
-            var body =
-                delimiter +
-                'Content-Type: application/json\r\n\r\n' +
-                JSON.stringify(metadata) +
-                delimiter +
-                'Content-Type: ' + contentType + '\r\n' +
-                'Content-Transfer-Encoding: base64\r\n' +
-                '\r\n' +
-                utf8_to_b64(contents) +
-                closeDelimiter;
-
-            return this._request({
-                'path': '/upload/drive/v2/files',
-                'method': 'POST',
-                'params': { 'uploadType': 'multipart' },
-                'headers': {
-                    'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
-                },
-                'body': body
+        _createFile: function (name, parent, content) {
+            return this._writeFile({
+                name: name,
+                parent: parent,
+                content: content
             });
         },
 
