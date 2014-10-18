@@ -20,13 +20,34 @@
         template: '#file-editor-template',
 
         ready: function () {
-            this.setTitle();
+            var me = this;
+
+            me.currentVersion = me.savedVersion = 0;
+
+            me.setTitle();
+
             setTimeout(focusTextbox, 10);
+
+            window.onbeforeunload = function () {
+                if (!me.isSaved()) {
+                    return 'You have unsaved changes. Are you sure you want to exit?';
+                }
+            }
+
+            me.$watch('app.data.content', function () {
+                ++me.currentVersion;
+            });
         },
 
         methods: {
+            isSaved: function () {
+                return this.currentVersion == this.savedVersion;
+            },
+
             exit: function (e) {
-                this.app = null;
+                if (this.isSaved() || confirm('You have unsaved changes. Are you sure you want to exit?')) {
+                    this.app = null;
+                }
             },
 
             setTitle: function (prefix) {
@@ -60,6 +81,7 @@
                 me.setTitle('Saving... ');
 
                 ns.fs.saveFile(data.file.id, data.content).then(function () {
+                    me.currentVersion = me.savedVersion;
                     me.setTitle();
                 }).catch(function (err) {
                     console.log(err);
