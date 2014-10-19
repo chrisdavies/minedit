@@ -22,6 +22,7 @@
         ready: function () {
             var me = this;
 
+            me.saving = false;
             me.currentVersion = me.savedVersion = 0;
 
             me.setTitle();
@@ -78,15 +79,18 @@
                 var me = this,
                     data = me.app.data;
 
+                me.saving = true;
                 me.setTitle('Saving... ');
 
                 ns.fs.saveFile(data.file.id, data.content).then(function () {
                     me.currentVersion = me.savedVersion;
-                    me.setTitle();
-                }).catch(function (err) {
+                 }).catch(function (err) {
                     console.log(err);
                     alert('Failed to save. See console.log for details.');
-                });
+                 }).finally(function () {
+                     me.saving = false;
+                     me.setTitle();
+                 });
             }
         }
     });
