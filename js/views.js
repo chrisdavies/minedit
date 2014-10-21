@@ -6,7 +6,7 @@
         if (tas.length) {
             var txt = tas.item(0);
             txt.focus();
-            txt.scrollIntoView(false);
+            return txt;
         }
     }
 
@@ -160,7 +160,12 @@
         },
 
         methods: {
-            focusTextbox: focusTextbox
+            focusTextbox: focusTextbox,
+
+            focusAndShowTextbox: function () {
+                var txtbox = this.focusTextbox();
+                txtbox && txtbox.scrollIntoView(false);
+            }
         }
     });
 
