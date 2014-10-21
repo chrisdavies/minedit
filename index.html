@@ -6,7 +6,7 @@
     <link href="css/main.css" rel="stylesheet" />
 </head>
 <body>
-    <div id="cmd-container" v-on="click: focusTextbox">
+    <div id="cmd-container">
         <div v-if="isRunningApp">
             <div v-view="shellStatus.app.name" v-with="shellStatus"></div>
         </div>
@@ -14,7 +14,7 @@
     </div>
 
     <script type="text/html" id="file-editor-template">
-        <div class="cmd-editor-container">
+        <div class="cmd-editor-container" v-on="click: focusTextbox">
             <div class="cmd-editor">
                 <autosize-textarea v-with="val: app.data.content" v-on="keydown: exit | key esc,
                                                                         keydown: detectSpecialInput"></autosize-textarea>
@@ -23,7 +23,7 @@
     </script>
 
     <script type="text/html" id="cmd-shell-template">
-        <div class="cmd-container">
+        <div class="cmd-container" v-on="click: focusAndShowTextbox">
             <div class="cmd-lines">
                 <div v-repeat="line: shellLines"><div class="cmd-line" v-style="color: line.color">{{line.value}}</div></div>
             </div>
