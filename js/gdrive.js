@@ -1,4 +1,5 @@
-﻿(function (ns) {
+﻿// GDrive wraps the Google drive api, providing a more conveient way to manage it
+(function (ns) {
     ns.GDrive = function GDrive(clientId) {
         this.clientId = clientId;
         this.scopes = 'https://www.googleapis.com/auth/drive';
