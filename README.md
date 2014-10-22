@@ -10,9 +10,9 @@ http://chrisdavies.github.io/minedit
 
 Type help to see a list of commands.
 
-Because Ctrl + C generally means copy, <esc> is instead used to quit the current command.
+Because Ctrl + C generally means copy, Esc is instead used to quit the current command.
 
-When editing, <esc> is how you exit. Ctrl + S is how you save.
+When editing, Esc is how you exit. Ctrl + S is how you save.
 
 
 ## TODO:
