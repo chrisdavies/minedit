@@ -1,4 +1,5 @@
-﻿function Plite() {
+﻿https://github.com/chrisdavies/plite
+function Plite() {
 
     var result,
         completed,

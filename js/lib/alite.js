@@ -1,4 +1,5 @@
-﻿var Alite = (function () {
+﻿// https://github.com/chrisdavies/plite
+var Alite = (function () {
 
     function response(req) {
         var isJson = req.responseText &&
