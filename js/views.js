@@ -10,6 +10,11 @@
         }
     }
 
+    function focusAndScrollToTextbox() {
+        var txt = focusTextbox();
+        txt && txt.scrollIntoView(false);
+    }
+
     // Autosize textarea directive
     Vue.component('autosize-textarea', {
         template: '<div class="autosize-textarea"><textarea v-model="val" autocomplete="off"></textarea><pre>{{val}} \n \n</pre></div>'
@@ -108,11 +113,11 @@
         ready: function () {
             var me = this;
 
-            setTimeout(focusTextbox, 10);
+            setTimeout(focusAndScrollToTextbox, 10);
             document.title = 'MinEdit $shell';
 
             me.$watch('shellStatus', function () {
-                !me.shellStatus.running && Vue.nextTick(focusTextbox);
+                !me.shellStatus.running && Vue.nextTick(focusAndScrollToTextbox);
             });
         },
 
@@ -162,10 +167,7 @@
         methods: {
             focusTextbox: focusTextbox,
 
-            focusAndShowTextbox: function () {
-                var txtbox = this.focusTextbox();
-                txtbox && txtbox.scrollIntoView(false);
-            }
+            focusAndScrollToTextbox: focusAndScrollToTextbox
         }
     });
 
