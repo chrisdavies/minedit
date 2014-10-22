@@ -14,9 +14,6 @@ SH.ShellCommand = function (line) {
 
     this.command = this.params.shift();
 
-    this.app = undefined;
-
-    // TODO: use size() function instead, to be consistent w/ CappedBuffer
     this.length = this.params.length;
 }
 
@@ -31,14 +28,5 @@ SH.ShellCommand.prototype = {
 
     last: function () {
         return this.params[this.params.length - 1];
-    },
-
-    // TODO: Move this to a more appropriate place: runs the specified app
-    // This is unrelated to shell command. Probably should go in ShellEnvironment
-    run: function (appName, appData) {
-        this.app = {
-            name: appName,
-            data: appData
-        };
     }
 };

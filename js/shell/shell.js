@@ -15,6 +15,13 @@
     Shell.prototype = {
         run: function () {
             this.stdin.readLine(processInput);
+        },
+
+        runApp: function (name, data) {
+            this.status.app = {
+                name: name,
+                data: data
+            };
         }
     };
 
@@ -23,7 +30,6 @@
 
     // Private functions to read/process shell commands
     function inputProcessed(args) {
-        me.status.app = args.app;
         me.status.running = false;
         me.stdin.readLine(processInput);
     }

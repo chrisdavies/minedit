@@ -121,7 +121,7 @@ SH.shell.fs.init().then(function () {
                 file = f;
                 return fs.loadFileContent(f);
             }).then(function (content) {
-                args.run('file-editor', {
+                ns.runApp('file-editor', {
                     file: {
                         name: file.title,
                         id: file.id
