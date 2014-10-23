@@ -1,4 +1,6 @@
-﻿// ShellHistory tracks and navigates the history of shell commands
+﻿'use asm';
+
+// ShellHistory tracks and navigates the history of shell commands
 SH.ShellHistory = function (maxSize) {
     this.buffer = new SH.CappedBuffer(maxSize);
     this.index = 0;

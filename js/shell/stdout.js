@@ -1,4 +1,6 @@
-﻿// Stdout controls output to the shell
+﻿'use asm';
+
+// Stdout controls output to the shell
 SH.Stdout = function (maxSize) {
     this.buffer = new SH.CappedBuffer(maxSize);
 }

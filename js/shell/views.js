@@ -1,4 +1,6 @@
-﻿// Standard shell views
+﻿'use asm';
+
+// Standard shell views
 (function (ns) {
 
     // Autosize textarea directive

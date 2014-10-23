@@ -1,4 +1,6 @@
-﻿// Stdin the standard-input interface for reading lines from the shell
+﻿'use asm';
+
+// Stdin the standard-input interface for reading lines from the shell
 SH.Stdin = function () {
     this.line;
     this.fn;

@@ -1,4 +1,6 @@
-﻿// ShellEnvironment represents the shell environment (think OS).
+﻿'use asm';
+
+// ShellEnvironment represents the shell environment (think OS).
 // So, commands/apps can be registered and controlled here.
 SH.ShellEnvironment = function () {
     this.commands = {};

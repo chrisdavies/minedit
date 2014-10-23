@@ -1,4 +1,6 @@
-﻿// The standard shell commands
+﻿'use asm';
+
+// The standard shell commands
 (function (shell) {
     var stdout = shell.stdout;
 

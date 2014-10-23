@@ -1,4 +1,6 @@
-﻿// CappedBuffer represents a buffer that will never exceed maxSize.
+﻿'use asm';
+
+// CappedBuffer represents a buffer that will never exceed maxSize.
 // The oldest value will be dropped when a new value is
 // pushed and maxSize has been met.
 SH.CappedBuffer = function (maxSize) {

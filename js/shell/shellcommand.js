@@ -1,4 +1,6 @@
-﻿// ShellCommand parses a shell command and provides access to its key parts
+﻿'use asm';
+
+// ShellCommand parses a shell command and provides access to its key parts
 SH.ShellCommand = function (line) {
     this.original = line;
 

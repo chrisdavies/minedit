@@ -1,4 +1,6 @@
-﻿// Defines the shell object, which is a singleton representing
+﻿'use asm';
+
+// Defines the shell object, which is a singleton representing
 // the current shell context
 (function () {
     function Shell() {
