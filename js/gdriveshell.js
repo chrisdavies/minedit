@@ -1,4 +1,6 @@
-﻿SH.shell.fs = new GDrive('141185055134-7i2slat0itmurhsej47u72ba0tspjhdb.apps.googleusercontent.com');
+﻿'use asm';
+
+SH.shell.fs = new GDrive('141185055134-7i2slat0itmurhsej47u72ba0tspjhdb.apps.googleusercontent.com');
 
 SH.shell.stdout.writeLine('Connecting to gdrive...');
 

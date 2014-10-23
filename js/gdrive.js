@@ -1,4 +1,6 @@
-﻿// GDrive wraps the Google drive api, providing a more conveient way to manage it
+﻿'use asm';
+
+// GDrive wraps the Google drive api, providing a more conveient way to manage it
 (function (ns) {
     ns.GDrive = function GDrive(clientId) {
         this.clientId = clientId;
